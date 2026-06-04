@@ -10,8 +10,11 @@ fail() {
 
 trap 'fail "script only works in root or apt operation failed"' ERR
 
+echo "WARNING: This script only works on AARCH64 Linux"
 echo "WARNING: This script only works when run as root."
 echo "You must also have deb-src entries enabled in your APT sources."
+echo
+echo "You can also run this script in Termux proot-distro"
 echo
 echo "Press B to exit."
 echo "Press A to continue."

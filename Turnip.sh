@@ -141,4 +141,3 @@ mv libvulkan_freedreno.so vulkan.ad07xx.so
 
 echo
 echo "Build complete!"
-echo "Output: $(pwd)/vulkan.ad07xx.so"

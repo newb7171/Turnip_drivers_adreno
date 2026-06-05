@@ -10,7 +10,7 @@ nocolor='\033[0m'
 #========================
 # CONFIG
 #========================
-deps="git meson ninja patchelf unzip curl pip3 flex bison zip glslang glslangValidator wget"
+deps="git meson ninja patchelf unzip curl python3 flex bison zip glslang-tools wget"
 workdir="$(pwd)/turnip_workdir"
 
 ndkver="r29"

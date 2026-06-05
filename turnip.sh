@@ -147,9 +147,8 @@ EOF
 			-Dvulkan-beta=true \
 			-Dfreedreno-kmds=kgsl \
 			-Degl=disabled \
-			-Dplatform-sdk-version=36 \
-			-Dandroid-libbacktrace=disabled \
-			--reconfigure
+			-Dplatform-sdk-version=34 \
+			-Dandroid-libbacktrace=disabled
 
 	echo "Compiling build files ..." $'\n'
 		ninja -C build-android-aarch64 install
@@ -163,7 +162,7 @@ EOF
 {
   "schemaVersion": 1,
   "name": "A8XX Turnip v$BUILD_VERSION",
-  "description": "A8xx support with some hacks. Built from source",
+  "description": "Built from source",
   "author": "$author",
   "packageVersion": "1",
   "vendor": "Mesa",

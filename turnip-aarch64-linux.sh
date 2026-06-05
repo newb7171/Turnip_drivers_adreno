@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
+# run bash --noprofile --norc ./turnip-aarch64-linux.sh
 #========================
 # COLORS
 #========================

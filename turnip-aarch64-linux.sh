@@ -1,4 +1,4 @@
-#!/bin/bash -euo pipefail
+#!/usr/bin/bash -e
 
 #========================
 # COLORS

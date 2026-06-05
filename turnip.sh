@@ -13,6 +13,7 @@ ndk="$workdir/$ndkver/toolchains/llvm/prebuilt/linux-x86_64/bin"
 sdkver="34"
 mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 srcfolder="mesa"
+author="JustCallMeJade"
 
 clear
 
@@ -162,8 +163,8 @@ EOF
 {
   "schemaVersion": 1,
   "name": "A8XX Turnip v$BUILD_VERSION",
-  "description": "A8xx support with some hacks. Built from $1 branch",
-  "author": "whitebelyash",
+  "description": "A8xx support with some hacks. Built from source",
+  "author": "$author",
   "packageVersion": "1",
   "vendor": "Mesa",
   "driverVersion": "Vulkan 1.4.335",

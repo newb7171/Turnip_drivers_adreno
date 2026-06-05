@@ -1,18 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-# run bash --noprofile --norc ./turnip-aarch64-linux.sh
-#========================
-# COLORS
-#========================
-green='\033[0;32m'
-red='\033[0;31m'
-nocolor='\033[0m'
-
 #========================
 # CONFIG
 #========================
-deps="git meson ninja patchelf unzip curl python3 flex bison zip wget"
+deps="git meson ninja patchelf unzip curl pip3 flex bison zip glslang glslangValidator wget"
 workdir="$(pwd)/turnip_workdir"
 
 ndkver="r29"
@@ -35,9 +27,20 @@ run_all() {
 
 	cd "$workdir/$srcfolder"
 
-	MESA_VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/[^0-9.]*//g')
+	# =========================
+	# FIXED VERSION DETECTION
+	# =========================
+	git fetch --tags --quiet || true
 
-	if [ -z "$MESA_VERSION" ]; then
+	MESA_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || true)
+
+	if [ -z "${MESA_VERSION}" ]; then
+		MESA_VERSION=$(git rev-parse --short HEAD)
+	fi
+
+	MESA_VERSION=$(echo "$MESA_VERSION" | sed 's/[^0-9.]*//g')
+
+	if [ -z "${MESA_VERSION}" ]; then
 		MESA_VERSION="unknown"
 	fi
 
@@ -56,24 +59,23 @@ check_deps() {
 
 	for dep in $deps; do
 		if command -v "$dep" >/dev/null 2>&1; then
-			echo -e "${green}✓ $dep found${nocolor}"
+			echo "✓ $dep found"
 		else
-			echo -e "${red}✗ $dep missing${nocolor}"
+			echo "✗ $dep missing"
 			deps_missing=1
 		fi
 	done
 
 	if [ "$deps_missing" -eq 1 ]; then
-		echo "Please install missing dependencies."
+		echo "Missing dependencies. Install them first."
 		exit 1
 	fi
 
-	echo "Installing Python mako module..."
 	pip3 install --quiet mako || true
 }
 
 #========================
-# WORKSPACE
+# WORKDIR
 #========================
 prepare_workdir() {
 	echo "Preparing workspace..."
@@ -85,9 +87,7 @@ prepare_workdir() {
 
 	wget https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz
 
-	echo "Extracting Android NDK..."
-
-	rm -rf "$ndkver"
+	echo "Extracting NDK..."
 
 	tar -xzvf android-ndk-r29-linux-aarch64.tar.gz
 
@@ -114,7 +114,7 @@ build_lib_for_android() {
 
 	export NDK="$workdir/$ndkver/toolchains/llvm/prebuilt/linux-x86_64/bin"
 
-	echo "Creating Meson cross files..."
+	rm -rf build-android-aarch64
 
 	cat <<EOF > android-aarch64.txt
 [binaries]
@@ -147,10 +147,7 @@ cpu = 'armv8'
 endian = 'little'
 EOF
 
-	echo "Removing old build directory..."
-	rm -rf build-android-aarch64
-
-	echo "Configuring Mesa..."
+	echo "Configuring build..."
 
 	meson setup build-android-aarch64 \
 		--cross-file android-aarch64.txt \
@@ -169,18 +166,16 @@ EOF
 		-Degl=disabled \
 		-Dandroid-libbacktrace=disabled
 
-	echo "Building Turnip..."
+	echo "Building..."
 
 	ninja -C build-android-aarch64 install
 
 	if [ ! -f /tmp/turnip/lib/libvulkan_freedreno.so ]; then
-		echo -e "${red}Build failed!${nocolor}"
+		echo "Build failed"
 		exit 1
 	fi
 
 	cd /tmp/turnip/lib
-
-	echo "Generating metadata..."
 
 	cat <<EOF > meta.json
 {
@@ -196,18 +191,14 @@ EOF
 }
 EOF
 
-	echo "Creating archive..."
-
 	zip -9 "Turnip-v$MESA_VERSION.zip" \
 		libvulkan_freedreno.so \
 		meta.json
 
-	echo
 	echo "================================="
-	echo "Build completed successfully!"
-	echo "Mesa Version: $MESA_VERSION"
-	echo "Output:"
-	echo "/tmp/turnip/lib/Turnip-v$MESA_VERSION.zip"
+	echo "BUILD COMPLETE"
+	echo "Version: $MESA_VERSION"
+	echo "Output: /tmp/turnip/lib/Turnip-v$MESA_VERSION.zip"
 	echo "================================="
 }
 

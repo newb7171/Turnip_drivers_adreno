@@ -33,3 +33,23 @@ Termux Proot-distro:   https://github.com/termux/proot-distro
 
 
 
+## Supported GPUs (6xx supported any)
+
+
+# 7XX:
+
+
+720G / 730 / 740 / 750 / 752 / 760 / 780
+
+
+# 8XX:
+
+
+810 / 825 / 830 / 840
+
+
+
+
+
+
+

@@ -14,7 +14,28 @@ mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 srcfolder="mesa"
 author="JustCallMeJade"
 
-clear
+#========================
+# UTIL: RETRY DOWNLOAD
+#========================
+download() {
+	local url="$1"
+	local out="$2"
+	local tries=3
+
+	for i in $(seq 1 $tries); do
+		echo "Downloading ($i/$tries): $url"
+
+		if wget -O "$out" "$url"; then
+			return 0
+		fi
+
+		echo "Retrying..."
+		sleep 2
+	done
+
+	echo "Failed to download: $url"
+	exit 1
+}
 
 #========================
 # MAIN
@@ -27,9 +48,64 @@ run_all() {
 
 	cd "$workdir/$srcfolder"
 
-	# =========================
-	# FIXED VERSION DETECTION
-	# =========================
+	resolve_mesa_version
+
+	build_lib_for_android
+}
+
+#========================
+# DEP CHECK
+#========================
+check_deps() {
+	deps_missing=0
+
+	for dep in $deps; do
+		if command -v "$dep" >/dev/null 2>&1; then
+			echo "✓ $dep"
+		else
+			echo "✗ missing: $dep"
+			deps_missing=1
+		fi
+	done
+
+	if [ "$deps_missing" -eq 1 ]; then
+		echo "Install missing dependencies first."
+		exit 1
+	fi
+
+	pip3 install --quiet mako || true
+}
+
+#========================
+# WORKSPACE
+#========================
+prepare_workdir() {
+	mkdir -p "$workdir"
+	cd "$workdir"
+
+	# ---- NDK ----
+	download \
+		"https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz" \
+		"ndk.tar.gz"
+
+	echo "Extracting NDK..."
+	tar -xzvf ndk.tar.gz
+
+	# ---- Mesa ----
+	rm -rf "$srcfolder"
+
+	git clone \
+		"$mesasrc" \
+		--depth=1 \
+		"$srcfolder"
+}
+
+#========================
+# VERSION RESOLUTION
+#========================
+resolve_mesa_version() {
+	echo "Resolving Mesa version..."
+
 	git fetch --tags --quiet || true
 
 	MESA_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || true)
@@ -38,68 +114,16 @@ run_all() {
 		MESA_VERSION=$(git rev-parse --short HEAD)
 	fi
 
+	# sanitize (keep numbers only where possible)
 	MESA_VERSION=$(echo "$MESA_VERSION" | sed 's/[^0-9.]*//g')
 
-	if [ -z "${MESA_VERSION}" ]; then
+	if [ -z "$MESA_VERSION" ]; then
 		MESA_VERSION="unknown"
 	fi
 
 	export MESA_VERSION
 
-	build_lib_for_android
-}
-
-#========================
-# DEPENDENCIES
-#========================
-check_deps() {
-	echo "Checking dependencies..."
-
-	deps_missing=0
-
-	for dep in $deps; do
-		if command -v "$dep" >/dev/null 2>&1; then
-			echo "✓ $dep found"
-		else
-			echo "✗ $dep missing"
-			deps_missing=1
-		fi
-	done
-
-	if [ "$deps_missing" -eq 1 ]; then
-		echo "Missing dependencies. Install them first."
-		exit 1
-	fi
-
-	pip3 install --quiet mako || true
-}
-
-#========================
-# WORKDIR
-#========================
-prepare_workdir() {
-	echo "Preparing workspace..."
-
-	mkdir -p "$workdir"
-	cd "$workdir"
-
-	echo "Downloading Android NDK..."
-
-	wget https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz
-
-	echo "Extracting NDK..."
-
-	tar -xzvf android-ndk-r29-linux-aarch64.tar.gz
-
-	echo "Cloning Mesa..."
-
-	rm -rf "$srcfolder"
-
-	git clone \
-		"$mesasrc" \
-		--depth=1 \
-		--no-single-branch \
-		"$srcfolder"
+	echo "Mesa version: $MESA_VERSION"
 }
 
 #========================
@@ -112,7 +136,9 @@ build_lib_for_android() {
 	echo "#define TUGEN8_DRV_VERSION \"v$MESA_VERSION\"" \
 		> ./src/freedreno/vulkan/tu_version.h
 
-	export NDK="$workdir/$ndkver/toolchains/llvm/prebuilt/linux-x86_64/bin"
+	# ---- dynamic NDK detection ----
+	NDK_DIR=$(find "$workdir" -maxdepth 1 -type d -name "android-ndk-*" | head -n 1)
+	export NDK="$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin"
 
 	rm -rf build-android-aarch64
 
@@ -147,8 +173,6 @@ cpu = 'armv8'
 endian = 'little'
 EOF
 
-	echo "Configuring build..."
-
 	meson setup build-android-aarch64 \
 		--cross-file android-aarch64.txt \
 		--native-file native.txt \
@@ -156,7 +180,6 @@ EOF
 		-Dbuildtype=release \
 		-Dstrip=true \
 		-Dplatforms=android \
-		-Dvideo-codecs= \
 		-Dplatform-sdk-version=$sdkver \
 		-Dandroid-stub=true \
 		-Dgallium-drivers= \
@@ -165,8 +188,6 @@ EOF
 		-Dfreedreno-kmds=kgsl \
 		-Degl=disabled \
 		-Dandroid-libbacktrace=disabled
-
-	echo "Building..."
 
 	ninja -C build-android-aarch64 install
 
@@ -196,7 +217,7 @@ EOF
 		meta.json
 
 	echo "================================="
-	echo "BUILD COMPLETE"
+	echo "DONE"
 	echo "Version: $MESA_VERSION"
 	echo "Output: /tmp/turnip/lib/Turnip-v$MESA_VERSION.zip"
 	echo "================================="

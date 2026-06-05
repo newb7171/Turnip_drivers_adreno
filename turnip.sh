@@ -48,7 +48,7 @@ check_deps(){
 		fi
 
 	echo "Installing python Mako dependency (if missing) ..." $'\n'
-		pip install mako &> /dev/null
+		pip3 install mako &> /dev/null
 }
 
 prepare_workdir(){

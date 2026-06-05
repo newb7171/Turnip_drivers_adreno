@@ -1,16 +1,35 @@
 # Turnip_drivers_adreno
-Turnip drivers compiled from source (Android only)
+Turnip drivers compiled from source for Android Emulators
+
+
+
+Compiled on Termux Proot-distro
 
 
 
 
-Bla Bla Blah i did not create these drivers blah blah blah compiled from source 
+Updates every week
+
+## Credits
 
 
 
 
-No Modifications Or Anything If You Want GPU Hacks Go To Whitebelyash Turnip Drivers
+Mesa source:   https://gitlab.freedesktop.org/mesa/mesa
 
 
 
-Update Every Mesa Version
+Android NDK:
+https://github.com/SnowNF/ndk-aarch64-linux
+
+
+
+Script (Modified): 
+https://github.com/whitebelyash
+
+
+
+Termux Proot-distro:   https://github.com/termux/proot-distro
+
+
+

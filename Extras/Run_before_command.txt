@@ -1,0 +1,2 @@
+sed -i '/^Types:/ {/deb-src/! s/$/ deb-src/;}' /etc/apt/sources.list.d/ubuntu.sources
+apt update && apt upgrade -y && apt build-dep mesa -y && apt install cmake pkg-config patchelf wget

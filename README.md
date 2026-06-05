@@ -1,6 +1,4 @@
-# Turnip
-# Drivers
-# Adreno
+# Turnip Drivers
 Turnip drivers compiled from source for Android Emulators
 
 

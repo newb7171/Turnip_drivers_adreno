@@ -146,9 +146,7 @@ build_lib_for_android() {
 [binaries]
 ar = '$NDK/llvm-ar'
 
-c = [
-  '/root/r29/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android34-clang'
-]
+c = '/root/r29/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android34-clang'
 
 cpp = ['/root/r29/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android34-clang++',
   '-fno-exceptions',

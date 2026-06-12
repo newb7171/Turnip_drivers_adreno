@@ -10,10 +10,11 @@ rm -rf r29
 wget -O "ndk.tar.gz" "https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz"
 tar -xzvf ndk.tar.gz
 
+rm -rf Mesa-android
 git clone "https://gitlab.freedesktop.org/mesa/mesa.git" --depth=1 "Mesa-android"
 cd "$(pwd)/turnip_workdir/Mesa-android"
 
-cat <<'PATCH_EOF' > 0001-freedreno-add-adreno-710-720-722.patch
+cat <<'PATCH_EOF' > patch.patch
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Mesa Contributor <contributor@example.com>
 Date: Fri, 12 Jun 2026 00:00:00 +0000
@@ -224,7 +225,7 @@ Subject: [PATCH] freedreno: add Adreno 710, 720, and 722 GPU entries
          GPUId(chip_id=0x07030002, name="FD725"),
 PATCH_EOF
 
-git apply 0001-freedreno-add-adreno-710-720-722.patch
+git apply patch.patch
 git add -A
 
 echo '#define TUGEN8_DRV_VERSION "v26.2.0-V2.1"' > ./src/freedreno/vulkan/tu_version.h

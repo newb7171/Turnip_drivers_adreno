@@ -11,7 +11,7 @@ ndkver="r29"
 sdkver="35"
 
 mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
-srcfolder="mesa"
+srcfolder="Mesa-Android"
 author="JustCallMeJade"
 
 # Hardcoded version (no auto-detection)

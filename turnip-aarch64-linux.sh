@@ -9,7 +9,7 @@ workdir="$(pwd)/turnip_workdir"
 ndkver="r29"
 sdkver="35"
 mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
-srcfolder="mesa"
+srcfolder="Mesa-android"
 author="JustCallMeJade"
 MESA_VERSION="26.2.0-V2.1"
 

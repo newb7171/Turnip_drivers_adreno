@@ -8,7 +8,6 @@ cd "$(pwd)/turnip_workdir"
 
 wget -O "ndk.tar.gz" "https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz"
 tar -xzvf ndk.tar.gz
-rm -rf "Mesa-android"
 
 git clone "https://gitlab.freedesktop.org/mesa/mesa.git" --depth=1 "Mesa-android"
 cd "$(pwd)/turnip_workdir/Mesa-android"
@@ -280,7 +279,8 @@ meson setup build-android-aarch64 \
 	-Degl=disabled \
 	-Dandroid-libbacktrace=disabled
 
-ninja -C build-android-aarch64 install
+ninja -C build-android-aarch64 -j$(nproc)
+ninja -C build-android-aarch64 install 
 cd /tmp/turnip/lib
 
 patchelf --set-soname vulkan.ad07xx.so libvulkan_freedreno.so

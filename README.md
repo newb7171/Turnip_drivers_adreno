@@ -8,7 +8,7 @@ Compiled on Termux Proot-distro
 
 
 
-Updates every 2 weeks
+Updates every Saturday
 
 ## Credits
 

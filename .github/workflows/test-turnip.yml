@@ -1,0 +1,219 @@
+name: Build Turnip A8XX
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_version:
+        description: Build Version
+        required: true
+        default: "1.0"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      BUILD_VERSION: ${{ github.event.inputs.build_version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Pull Ubuntu 26.04 AMD64
+        run: |
+          docker pull --platform linux/amd64 ubuntu:26.04
+
+      - name: Build Turnip
+        run: |
+          docker run --rm \
+            --platform linux/amd64 \
+            -e BUILD_VERSION="${BUILD_VERSION}" \
+            -v "${GITHUB_WORKSPACE}:/workspace" \
+            -w /workspace \
+            ubuntu:26.04 \
+            bash -euxo pipefail -c '
+
+            export DEBIAN_FRONTEND=noninteractive
+
+            sed -i "s/^# deb-src/deb-src/g" /etc/apt/sources.list || true
+
+            apt update
+
+            apt install -y \
+              git \
+              curl \
+              patchelf \
+              meson \
+              ninja-build \
+              unzip \
+              python3-pip \
+              flex \
+              bison \
+              zip \
+              glslang-tools \
+              ccache \
+              build-essential \
+              pkg-config
+
+            apt build-dep mesa -y
+
+            pip3 install mako
+
+            WORKDIR=/workspace/turnip_workdir
+            NDKVER=android-ndk-r29
+            SDKVER=34
+            MESA_SRC=https://github.com/whitebelyash/mesa-unified
+            SRCFOLDER=mesa
+
+            mkdir -p "$WORKDIR"
+            cd "$WORKDIR"
+
+            curl -L \
+              "https://dl.google.com/android/repository/${NDKVER}-linux.zip" \
+              -o "${NDKVER}-linux.zip"
+
+            unzip -q "${NDKVER}-linux.zip"
+
+            git clone \
+              "$MESA_SRC" \
+              --depth=1 \
+              --no-single-branch \
+              "$SRCFOLDER"
+
+            cd "$SRCFOLDER"
+
+            build_branch() {
+
+              BRANCH="$1"
+              OUTNAME="$2"
+              APPLY_PATCHES="${3:-false}"
+
+              git reset --hard
+              git clean -fdx
+
+              git checkout --force "origin/$BRANCH"
+
+              if [ "$APPLY_PATCHES" = "true" ] && [ -d /workspace/patches ]; then
+                for patch in /workspace/patches/*; do
+                  [ -f "$patch" ] || continue
+                  git apply --check "$patch"
+                  git apply "$patch"
+                done
+              fi
+
+              echo "#define TUGEN8_DRV_VERSION \"v${BUILD_VERSION}\"" \
+                > src/freedreno/vulkan/tu_version.h
+
+              NDK="$WORKDIR/$NDKVER/toolchains/llvm/prebuilt/linux-x86_64/bin"
+
+              mkdir -p "$WORKDIR/bin"
+
+              ln -sf "$NDK/clang" "$WORKDIR/bin/cc"
+              ln -sf "$NDK/clang++" "$WORKDIR/bin/c++"
+
+              export PATH="$WORKDIR/bin:$NDK:$PATH"
+              export CC=clang
+              export CXX=clang++
+              export AR=llvm-ar
+              export RANLIB=llvm-ranlib
+              export STRIP=llvm-strip
+              export OBJDUMP=llvm-objdump
+              export OBJCOPY=llvm-objcopy
+              export LDFLAGS="-fuse-ld=lld"
+
+              rm -rf build-android-aarch64
+
+              cat > android-aarch64.txt <<EOF
+[binaries]
+ar = '\''$NDK/llvm-ar'\''
+c = ['\''ccache'\'', '\''$NDK/aarch64-linux-android${SDKVER}-clang'\'']
+cpp = ['\''ccache'\'', '\''$NDK/aarch64-linux-android${SDKVER}-clang++'\'', '\''-fno-exceptions'\'', '\''-fno-unwind-tables'\'', '\''-fno-asynchronous-unwind-tables'\'', '\''--start-no-unused-arguments'\'', '\''-static-libstdc++'\'', '\''--end-no-unused-arguments'\'']
+c_ld = '\''$NDK/ld.lld'\''
+cpp_ld = '\''$NDK/ld.lld'\''
+strip = '\''$NDK/llvm-strip'\''
+pkg-config = ['\''env'\'', '\''PKG_CONFIG_LIBDIR=$NDK/pkg-config'\'', '\''/usr/bin/pkg-config'\'']
+
+[host_machine]
+system = '\''android'\''
+cpu_family = '\''aarch64'\''
+cpu = '\''armv8'\''
+endian = '\''little'\''
+EOF
+
+              cat > native.txt <<EOF
+[build_machine]
+c = ['\''ccache'\'', '\''clang'\'']
+cpp = ['\''ccache'\'', '\''clang++'\'']
+ar = '\''llvm-ar'\''
+strip = '\''llvm-strip'\''
+c_ld = '\''ld.lld'\''
+cpp_ld = '\''ld.lld'\''
+system = '\''linux'\''
+cpu_family = '\''x86_64'\''
+cpu = '\''x86_64'\''
+endian = '\''little'\''
+EOF
+
+              meson setup build-android-aarch64 \
+                --cross-file android-aarch64.txt \
+                --native-file native.txt \
+                --prefix /tmp/turnip-${OUTNAME} \
+                -Dbuildtype=release \
+                -Dstrip=true \
+                -Dplatforms=android \
+                -Dvideo-codecs= \
+                -Dandroid-stub=true \
+                -Dgallium-drivers= \
+                -Dvulkan-drivers=freedreno \
+                -Dvulkan-beta=true \
+                -Dfreedreno-kmds=kgsl \
+                -Degl=disabled \
+                -Dplatform-sdk-version=36 \
+                -Dandroid-libbacktrace=disabled
+
+              ninja -C build-android-aarch64 install
+
+              test -f /tmp/turnip-${OUTNAME}/lib/libvulkan_freedreno.so
+
+              cd /tmp/turnip-${OUTNAME}/lib
+
+              cat > meta.json <<EOF
+{
+  "schemaVersion": 1,
+  "name": "A8XX Turnip v${BUILD_VERSION}",
+  "description": "Built from ${BRANCH}",
+  "author": "whitebelyash",
+  "packageVersion": "1",
+  "vendor": "Mesa",
+  "driverVersion": "Vulkan 1.4.335",
+  "minApi": 28,
+  "libraryName": "libvulkan_freedreno.so"
+}
+EOF
+
+              zip "/workspace/a8xx-${OUTNAME}-V${BUILD_VERSION}.zip" \
+                libvulkan_freedreno.so \
+                meta.json
+
+              cd "$WORKDIR/$SRCFOLDER"
+            }
+
+            build_branch turnip/gen8 turnip-gen8
+            build_branch turnip/gen8 turnip-gen8-sync true
+
+            '
+
+      - name: Upload turnip-gen8
+        uses: actions/upload-artifact@v4
+        with:
+          name: turnip-gen8
+          path: a8xx-turnip-gen8-V*.zip
+
+      - name: Upload turnip-gen8-sync
+        uses: actions/upload-artifact@v4
+        with:
+          name: turnip-gen8-sync
+          path: a8xx-turnip-gen8-sync-V*.zip

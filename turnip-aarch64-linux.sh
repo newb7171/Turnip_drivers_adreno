@@ -1,19 +1,20 @@
 #!/bin/bash -e
 set -euo pipefail
 
-export MESA=26.2.0-V2
-pip3 install --quiet mako || true
+apt build-dep mesa -y && apt install wget zip git pkg-config
 
-mkdir -p "$(pwd)/turnip_workdir"
-cd "$(pwd)/turnip_workdir"
+export MESA=26.2.0-V2
+
+mkdir turnip_workdir
+cd turnip_workdir
 
 rm -rf r29
 wget -O "ndk.tar.gz" "https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz"
 tar -xzvf ndk.tar.gz
 
 rm -rf Mesa-android
-git clone "https://gitlab.freedesktop.org/mesa/mesa.git" --depth=1 "Mesa-android"
-cd "$(pwd)/turnip_workdir/Mesa-android"
+git clone https://gitlab.freedesktop.org/mesa/mesa.git --depth=1 Mesa-Android
+cd Mesa-android
 
 cat <<'PATCH_EOF' > patch.patch
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
@@ -227,11 +228,14 @@ Subject: [PATCH] freedreno: add Adreno 710, 720, and 722 GPU entries
 PATCH_EOF
 
 git apply patch.patch
+
 git add -A
 
-echo '#define TUGEN8_DRV_VERSION "$MESA"' > ./src/freedreno/vulkan/tu_version.h
+git commit -m "Added patch"
 
-export NDK="$(find "$(pwd)/../" -maxdepth 1 -type d -name "android-ndk-*" | head -n 1)/toolchains/llvm/prebuilt/linux-x86_64/bin"
+echo '#define TUGEN8_DRV_VERSION "$MESA"' > src/freedreno/vulkan/tu_version.h
+
+export NDK=/root/turnip_workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/bin
 
 rm -rf build-android-aarch64
 
@@ -244,6 +248,9 @@ c_ld = '$NDK/ld.lld'
 cpp_ld = '$NDK/ld.lld'
 strip = '$NDK/llvm-strip'
 pkg-config = 'pkg-config'
+
+[properties]
+sys_root = '$NDK/../sysroot'
 
 [host_machine]
 system = 'android'
@@ -283,10 +290,13 @@ meson setup build-android-aarch64 \
 	-Dandroid-libbacktrace=disabled
 
 ninja -C build-android-aarch64 -j$(nproc)
+
 ninja -C build-android-aarch64 install 
+
 cd /tmp/turnip/lib
 
 patchelf --set-soname vulkan.ad07xx.so libvulkan_freedreno.so
+
 mv libvulkan_freedreno.so vulkan.ad07xx.so
 
 cat <<EOF > meta.json

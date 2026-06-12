@@ -1,0 +1,220 @@
+name: Ubuntu AMD64 Wine Build Environment
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+  schedule:
+    # Runs at 00:00 UTC on day 1 of every 2nd month (Jan, Mar, May, Jul, Sep, Nov)
+    - cron: '0 0 1 */2 *'
+
+env:
+  BUILD_NAME: "wine-winlator-custom"
+
+jobs:
+  build-env:
+    runs-on: ubuntu-latest
+    
+    container:
+      image: ubuntu:26.04
+      options: --user root
+
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Enable Source Repositories & Update
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+
+          # Enable 'deb-src' for the build-dep command
+          if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then
+            sed -i 's/Types: deb/Types: deb deb-src/g' /etc/apt/sources.list.d/ubuntu.sources
+          elif [ -f /etc/apt/sources.list ]; then
+            sed -i 'p;s/^deb /deb-src /' /etc/apt/sources.list
+          fi
+          
+          apt-get update
+
+      - name: Install Requested Dependencies
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          
+          # 1. Install the build dependencies for Wine
+          apt-get build-dep wine -y
+          
+          # 2. Install your complete list of additional packages, GStreamer stack, and MinGW compilers
+          apt-get install -y \
+            debootstrap \
+            perl \
+            git \
+            wget \
+            xz-utils \
+            bubblewrap \
+            autoconf \
+            flex \
+            bison \
+            gcc-multilib \
+            g++-multilib \
+            gcc-mingw-w64 \
+            mingw-w64 \
+            libx11-dev \
+            libxext-dev \
+            libxi-dev \
+            libxrandr-dev \
+            libxcursor-dev \
+            libxcomposite-dev \
+            libxdamage-dev \
+            libxfixes-dev \
+            libxxf86vm-dev \
+            libxrender-dev \
+            libxinerama-dev \
+            libgl-dev \
+            libsdl2-dev \
+            libglu-dev \
+            libosmesa6-dev \
+            libfreetype6-dev \
+            libfontconfig1-dev \
+            libpcap-dev \
+            libdbus-1-dev \
+            libssl-dev \
+            libasound2-dev \
+            libpulse-dev \
+            libudev-dev \
+            libcups2-dev \
+            libjpeg-dev \
+            libpng-dev \
+            libtiff-dev \
+            libxml2-dev \
+            libvulkan-dev \
+            vulkan-tools \
+            libvulkan1 \
+            mesa-vulkan-drivers \
+            gettext \
+            libgettextpo-dev \
+            libunwind-dev \
+            libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-* \
+            libmpg123-dev \
+            libopenal-dev
+
+      - name: Clone Latest Wine Source
+        run: |
+          echo "Cloning the latest upstream Wine development tree..."
+          git clone --depth 1 https://gitlab.winehq.org/wine/wine.git wine-source
+
+      - name: Apply Winlator /tmp Path Patches
+        working-directory: wine-source
+        run: |
+          echo "Applying hardcoded path redirections for Android/Winlator compatibility..."
+          
+          find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.in" -o -name "*.spec" \) -exec grep -l "/tmp" {} \; | xargs -r sed -i 's|/tmp/|/data/data/com.winlator/files/rootfs/usr/tmp/|g'
+          find server -type f \( -name "*.c" -o -name "*.h" \) -exec sed -i 's|"/tmp"|"/data/data/com.winlator/files/rootfs/usr/tmp"|g' {} +
+          find . -name "file.c" -exec sed -i 's|"/tmp"|"/data/data/com.winlator/files/rootfs/usr/tmp"|g' {} +
+          find . -name "loader.c" -exec sed -i 's|"/tmp"|"/data/data/com.winlator/files/rootfs/usr/tmp"|g' {} +
+          find . -name "server.c" -exec sed -i 's|"/tmp"|"/data/data/com.winlator/files/rootfs/usr/tmp"|g' {} +
+
+      - name: Create Build Directory
+        run: |
+          mkdir wine
+
+      - name: Set Winlator Compilation Environment Flags
+        run: |
+          echo "Configuring environment variables for multi-platform compilation optimizations..."
+          
+          echo "CROSSCC=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
+          echo "CROSSCXX=x86_64-w64-mingw32-g++" >> $GITHUB_ENV
+          
+          OPTIMIZATIONS="-march=x86-64 -msse3 -mfpmath=sse -O3 -ftree-vectorize -pipe"
+          echo "CFLAGS=$OPTIMIZATIONS" >> $GITHUB_ENV
+          echo "CXXFLAGS=$OPTIMIZATIONS" >> $GITHUB_ENV
+          echo "CROSSCFLAGS=$OPTIMIZATIONS" >> $GITHUB_ENV
+          echo "CROSSCXXFLAGS=$OPTIMIZATIONS" >> $GITHUB_ENV
+
+      - name: Configure Wine Build Source
+        working-directory: wine
+        run: |
+          echo "Executing script configurations..."
+          ../wine-source/configure \
+            --enable-win64 \
+            --enable-archs=i386,x86_64 \
+            --prefix=/tmp/wine \
+            --with-x \
+            --with-vulkan \
+            --with-alsa \
+            --with-pulse \
+            --with-freetype \
+            --with-fontconfig \
+            --with-gstreamer \
+            --with-gettext \
+            --with-sdl \
+            --enable-nls \
+            --disable-winemenubuilder \
+            --disable-win16 \
+            --disable-tests \
+            --without-ldap \
+            --without-capi \
+            --without-oss \
+            --without-cups \
+            --without-dbus \
+            --without-coreaudio \
+            --without-gphoto \
+            --without-osmesa \
+            --without-sane \
+            --without-pcap \
+            --without-pcsclite \
+            --without-udev \
+            --without-unwind \
+            --without-usb \
+            --without-v4l2 \
+            --without-wayland
+
+      - name: Build and Install Wine
+        working-directory: wine
+        run: |
+          echo "Compiling Wine using all available CPU threads..."
+          make -j$(nproc)
+          
+          echo "Installing built files into staging prefix (/tmp/wine)..."
+          make install
+
+      - name: Prepare Deployment Package Layout
+        run: |
+          echo "Staging structural layout folders..."
+          PACKAGE_NAME="${{ env.BUILD_NAME }}"
+          mkdir -p wine-package/$PACKAGE_NAME
+          
+          echo "Copying staging runtime assets out of /tmp/wine..."
+          cp -r /tmp/wine/* wine-package/$PACKAGE_NAME/
+          
+          echo "=== Previewing Package Files (Top 20) ==="
+          find wine-package -type f | sort | head -20
+          
+          echo "Compressing deployment bundle to tar.xz..."
+          tar -cJf $PACKAGE_NAME.tar.xz -C wine-package $PACKAGE_NAME
+          
+          echo "=== Verifying Generated Compressed Asset ==="
+          ls -lh *.tar.xz
+
+      - name: Generate Integrity Checksums
+        run: |
+          cd $GITHUB_WORKSPACE
+          
+          echo "Calculating SHA256 hashes..."
+          sha256sum *.tar.xz > checksums.txt
+          
+          echo "=== Content of checksums.txt ==="
+          cat checksums.txt
+
+      - name: Upload Wine Package as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BUILD_NAME }}-dist
+          path: |
+            *.tar.xz
+            checksums.txt
+          retention-days: 60
+          

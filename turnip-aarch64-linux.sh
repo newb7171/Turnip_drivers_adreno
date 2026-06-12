@@ -1,6 +1,7 @@
 #!/bin/bash -e
 set -euo pipefail
 
+export MESA=26.2.0-V2
 pip3 install --quiet mako || true
 
 mkdir -p "$(pwd)/turnip_workdir"
@@ -228,7 +229,7 @@ PATCH_EOF
 git apply patch.patch
 git add -A
 
-echo '#define TUGEN8_DRV_VERSION "v26.2.0-V2.1"' > ./src/freedreno/vulkan/tu_version.h
+echo '#define TUGEN8_DRV_VERSION "$MESA"' > ./src/freedreno/vulkan/tu_version.h
 
 export NDK="$(find "$(pwd)/../" -maxdepth 1 -type d -name "android-ndk-*" | head -n 1)/toolchains/llvm/prebuilt/linux-x86_64/bin"
 
@@ -291,7 +292,7 @@ mv libvulkan_freedreno.so vulkan.ad07xx.so
 cat <<EOF > meta.json
 {
   "schemaVersion": 1,
-  "name": "Mesa Turnip v26.2.0-V2.1",
+  "name": "Mesa Turnip v$MESA",
   "description": "Built from source",
   "author": "JustCallMeJade",
   "packageVersion": "1",
@@ -302,4 +303,4 @@ cat <<EOF > meta.json
 }
 EOF
 
-zip -9 "Turnip-v26.2.0-V2.1.zip" vulkan.ad07xx.so meta.json
+zip -9 "Turnip-v$MESA.zip" vulkan.ad07xx.so meta.json

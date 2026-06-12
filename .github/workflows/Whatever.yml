@@ -1,4 +1,4 @@
-name: Ubuntu AMD64 Wine Build Environment
+name: Ubuntu AMD64 WineHQ WoW64 Build Environment
 
 on:
   push:
@@ -6,47 +6,55 @@ on:
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
+    inputs:
+      wine_branch:
+        description: 'Wine Branch'
+        required: false
+        default: 'staging'
+        type: choice
+        options:
+          - vanilla
+          - staging
+      wine_version:
+        description: 'Wine Version (e.g., 9.22 or latest)'
+        required: false
+        default: 'latest'
+        type: string
   schedule:
-    # Runs at 00:00 UTC on day 1 of every 2nd month (Jan, Mar, May, Jul, Sep, Nov)
+    # Runs at 00:00 UTC on day 1 of every 2nd month
     - cron: '0 0 1 */2 *'
 
 env:
   BUILD_NAME: "wine-winlator-custom"
+  USE_CCACHE: true
+
+permissions:
+  contents: write
 
 jobs:
-  build-env:
+  build-wine-wow64:
     runs-on: ubuntu-latest
     
     container:
       image: ubuntu:26.04
-      options: --user root
+      options: --user root --platform linux/amd64
 
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v4
 
-      - name: Enable Source Repositories & Update
+      - name: Update Package Repositories
         run: |
           export DEBIAN_FRONTEND=noninteractive
-
-          # Enable 'deb-src' for the build-dep command
-          if [ -f /etc/apt/sources.list.d/ubuntu.sources ]; then
-            sed -i 's/Types: deb/Types: deb deb-src/g' /etc/apt/sources.list.d/ubuntu.sources
-          elif [ -f /etc/apt/sources.list ]; then
-            sed -i 'p;s/^deb /deb-src /' /etc/apt/sources.list
-          fi
-          
           apt-get update
 
       - name: Install Requested Dependencies
         run: |
           export DEBIAN_FRONTEND=noninteractive
           
-          # 1. Install the build dependencies for Wine
-          apt-get build-dep wine -y
-          
-          # 2. Install your complete list of additional packages, GStreamer stack, and MinGW compilers
+          # Core build tools and full feature dependency matrix
           apt-get install -y \
+            build-essential \
             debootstrap \
             perl \
             git \
@@ -97,19 +105,76 @@ jobs:
             libunwind-dev \
             libgstreamer1.0-dev \
             libgstreamer-plugins-base1.0-dev \
+            libgstreamer-plugins-good1.0-dev \
+            libgstreamer-plugins-bad1.0-dev \
             gstreamer1.0-* \
             libmpg123-dev \
-            libopenal-dev
+            libopenal-dev \
+            libfaad-dev \
+            libflac-dev \
+            libvorbis-dev \
+            libx264-dev \
+            libx265-dev \
+            libvpx-dev \
+            libtheora-dev
 
-      - name: Clone Latest Wine Source
+      - name: Fetch WineHQ Source and Staging Patches
         run: |
-          echo "Cloning the latest upstream Wine development tree..."
-          git clone --depth 1 https://gitlab.winehq.org/wine/wine.git wine-source
+          set -e
+          WINE_BRANCH="${{ github.event.inputs.wine_branch || 'staging' }}"
+          WINE_VERSION="${{ github.event.inputs.wine_version || 'latest' }}"
+          BUILD_DIR="/tmp/build_wine_${WINE_BRANCH}_${WINE_VERSION}"
+          
+          echo "Setting up Wine WoW64 Workspace..."
+          mkdir -p "$BUILD_DIR"
+          cd "$BUILD_DIR"
+          
+          # Clone Official Upstream WineHQ Mirror
+          git clone https://github.com/wine-mirror/wine.git wine
+          SOURCE_DIR="wine"
+          cd "$SOURCE_DIR"
+          
+          git config advice.detachedHead false
+          
+          if [ "$WINE_VERSION" != "latest" ]; then
+            git checkout "wine-$WINE_VERSION"
+          fi
+          
+          WINE_VERSION_ACTUAL=$(git describe --tags --abbrev=0 2>/dev/null || echo "$WINE_VERSION")
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          FINAL_BUILD_NAME="wine-${WINE_VERSION_ACTUAL}-${COMMIT_HASH}-${WINE_BRANCH}-wow64"
+          
+          PURE_VERSION=$(echo "$WINE_VERSION_ACTUAL" | sed 's/^wine-//')
+          STAGING_VERSION="v${PURE_VERSION}"
+          
+          # Process Staging patches if required
+          if [ "$WINE_BRANCH" = "staging" ]; then
+            echo "Downloading staging patches for format: ${STAGING_VERSION}"
+            wget -O "wine-staging-${PURE_VERSION}.tar.gz" "https://github.com/wine-staging/wine-staging/archive/refs/tags/${STAGING_VERSION}.tar.gz" || \
+            wget -O "wine-staging-${PURE_VERSION}.tar.gz" "https://github.com/wine-staging/wine-staging/archive/refs/tags/v${PURE_VERSION}.tar.gz"
+            
+            if [ -f "wine-staging-${PURE_VERSION}.tar.gz" ]; then
+              tar -xzf "wine-staging-${PURE_VERSION}.tar.gz"
+              STAGING_DIR=$(find . -maxdepth 1 -type d -name "*staging*" | head -1)
+              if [ -n "$STAGING_DIR" ] && [ -d "$STAGING_DIR/staging" ]; then
+                echo "Applying Staging Ecosystem Patches..."
+                cd "$STAGING_DIR/staging"
+                chmod +x patchinstall.py
+                ./patchinstall.py --all --destdir=../../
+                cd "../.."
+              fi
+            fi
+          fi
+          
+          # Pass operational contextual state variables to environment pipeline
+          echo "BUILD_NAME=$FINAL_BUILD_NAME" >> $GITHUB_ENV
+          echo "WORKSPACE_SOURCE_DIR=$(pwd)" >> $GITHUB_ENV
+          echo "PURE_VERSION=$PURE_VERSION" >> $GITHUB_ENV
 
-      - name: Apply Winlator /tmp Path Patches
-        working-directory: wine-source
+      - name: Apply Winlator Compatibility Patches
         run: |
-          echo "Applying hardcoded path redirections for Android/Winlator compatibility..."
+          cd ${{ env.WORKSPACE_SOURCE_DIR }}
+          echo "Injecting Winlator isolated /tmp runtime folder redirection..."
           
           find . -type f \( -name "*.c" -o -name "*.h" -o -name "*.in" -o -name "*.spec" \) -exec grep -l "/tmp" {} \; | xargs -r sed -i 's|/tmp/|/data/data/com.winlator/files/rootfs/usr/tmp/|g'
           find server -type f \( -name "*.c" -o -name "*.h" \) -exec sed -i 's|"/tmp"|"/data/data/com.winlator/files/rootfs/usr/tmp"|g' {} +
@@ -117,31 +182,45 @@ jobs:
           find . -name "loader.c" -exec sed -i 's|"/tmp"|"/data/data/com.winlator/files/rootfs/usr/tmp"|g' {} +
           find . -name "server.c" -exec sed -i 's|"/tmp"|"/data/data/com.winlator/files/rootfs/usr/tmp"|g' {} +
 
-      - name: Create Build Directory
+      - name: Apply Stability Upstream Fixes
         run: |
-          mkdir wine
-
-      - name: Set Winlator Compilation Environment Flags
-        run: |
-          echo "Configuring environment variables for multi-platform compilation optimizations..."
+          cd ${{ env.WORKSPACE_SOURCE_DIR }}
+          VERSION_MAJOR=$(echo "${{ env.PURE_VERSION }}" | cut -d. -f1)
+          VERSION_MINOR=$(echo "${{ env.PURE_VERSION }}" | cut -d. -f2)
           
-          echo "CROSSCC=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
-          echo "CROSSCXX=x86_64-w64-mingw32-g++" >> $GITHUB_ENV
+          if [ "$VERSION_MAJOR" -gt 9 ] || [ "$VERSION_MAJOR" -eq 9 -a "$VERSION_MINOR" -ge 10 ]; then
+            echo "Applying 9.10+ DXGI Manager Stability patch..."
+            wget https://github.com/afeimod/linbox/raw/main/path/wine_do_not_create_dxgi_manager2.patch
+            if [ -f "dlls/mfplat/main.c" ]; then
+              patch -p1 < wine_do_not_create_dxgi_manager2.patch
+            fi
+          else
+            echo "Applying sub-9.10 multimedia routing patches..."
+            wget -O fix_wine9.2_mfplat.sh https://github.com/afeimod/linbox/raw/main/path/fix_wine9.2_mfplat.sh
+            chmod +x fix_wine9.2_mfplat.sh
+            ./fix_wine9.2_mfplat.sh
+          fi
+
+      - name: Compile True WoW64 Architecture Build
+        run: |
+          cd ${{ env.WORKSPACE_SOURCE_DIR }}
+          mkdir -p build-wow64
+          cd build-wow64
+          
+          export CROSSCC="x86_64-w64-mingw32-gcc"
+          export CROSSCXX="x86_64-w64-mingw32-g++"
           
           OPTIMIZATIONS="-march=x86-64 -msse3 -mfpmath=sse -O3 -ftree-vectorize -pipe"
-          echo "CFLAGS=$OPTIMIZATIONS" >> $GITHUB_ENV
-          echo "CXXFLAGS=$OPTIMIZATIONS" >> $GITHUB_ENV
-          echo "CROSSCFLAGS=$OPTIMIZATIONS" >> $GITHUB_ENV
-          echo "CROSSCXXFLAGS=$OPTIMIZATIONS" >> $GITHUB_ENV
+          export CFLAGS=$OPTIMIZATIONS
+          export CXXFLAGS=$OPTIMIZATIONS
+          export CROSSCFLAGS=$OPTIMIZATIONS
+          export CROSSCXXFLAGS=$OPTIMIZATIONS
 
-      - name: Configure Wine Build Source
-        working-directory: wine
-        run: |
-          echo "Executing script configurations..."
-          ../wine-source/configure \
+          echo "Configuring Wine WoW64 compilation landscape..."
+          ../configure \
             --enable-win64 \
             --enable-archs=i386,x86_64 \
-            --prefix=/tmp/wine \
+            --prefix=/tmp/wine-install-wow64 \
             --with-x \
             --with-vulkan \
             --with-alsa \
@@ -172,44 +251,37 @@ jobs:
             --without-v4l2 \
             --without-wayland
 
-      - name: Build and Install Wine
-        working-directory: wine
-        run: |
-          echo "Compiling Wine using all available CPU threads..."
+          echo "Compiling structural targets..."
           make -j$(nproc)
-          
-          echo "Installing built files into staging prefix (/tmp/wine)..."
           make install
 
       - name: Prepare Deployment Package Layout
         run: |
-          echo "Staging structural layout folders..."
           PACKAGE_NAME="${{ env.BUILD_NAME }}"
           mkdir -p wine-package/$PACKAGE_NAME
           
-          echo "Copying staging runtime assets out of /tmp/wine..."
-          cp -r /tmp/wine/* wine-package/$PACKAGE_NAME/
+          echo "Copying staging runtime assets..."
+          cp -r /tmp/wine-install-wow64/* wine-package/$PACKAGE_NAME/
+
+      - name: Create Compressed Binary Archive
+        run: |
+          PACKAGE_NAME="${{ env.BUILD_NAME }}"
           
-          echo "=== Previewing Package Files (Top 20) ==="
+          echo "=== Previewing Structural Tree Assets ==="
           find wine-package -type f | sort | head -20
           
-          echo "Compressing deployment bundle to tar.xz..."
           tar -cJf $PACKAGE_NAME.tar.xz -C wine-package $PACKAGE_NAME
           
-          echo "=== Verifying Generated Compressed Asset ==="
+          echo "Archive Complete:"
           ls -lh *.tar.xz
 
-      - name: Generate Integrity Checksums
+      - name: Generate Checksums
         run: |
           cd $GITHUB_WORKSPACE
-          
-          echo "Calculating SHA256 hashes..."
           sha256sum *.tar.xz > checksums.txt
-          
-          echo "=== Content of checksums.txt ==="
           cat checksums.txt
 
-      - name: Upload Wine Package as Artifact
+      - name: Upload Wine WoW64 Bundle Assets
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BUILD_NAME }}-dist
@@ -217,4 +289,29 @@ jobs:
             *.tar.xz
             checksums.txt
           retention-days: 60
+
+      - name: Publish Production Release Assets
+        uses: softprops/action-gh-release@v1
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ env.BUILD_NAME }}
+          name: Wine HQ WoW64 (${{ github.event.inputs.wine_branch || 'staging' }}) Build
+          body: |
+            # Upstream WineHQ True WoW64 Engine
+            
+            ## Architecture Details
+            - **Upstream Engine Base**: Official WineHQ Mirror Archive
+            - **Target Infrastructure Setup**: True WoW64 Structure (Co-execution layer routing 32-bit and 64-bit Windows applications natively)
+            - **Operational Intended Use-Case Layer**: Advanced Android x86 emulation execution wrappers (Termux / Winlator backend compatible environment)
+            - **Vulkan Driver System Stack**: Explicitly Enabled
+            - **Multimedia Backend Matrix**: Expanded GStreamer Engine Core Hooks
+            - **System Localization Hooks**: Intact Standard Posix Layout
+
+            ## Installation Guidelines
+            Decompress the archive payload contents and allocate the nested dynamic directories into your container structure system path layouts.
+          files: |
+            ${{ github.workspace }}/*.tar.xz
+            ${{ github.workspace }}/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           

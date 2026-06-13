@@ -280,6 +280,8 @@ cpu = 'armv8'
 endian = 'little'
 EOF
 
+rm -rf /root/turnip
+
 meson setup build-android-aarch64 \
 	--cross-file android-aarch64.txt \
 	--native-file native.txt \

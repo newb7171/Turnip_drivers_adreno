@@ -61,9 +61,6 @@ cpp_ld = '$NDK/ld.lld'
 strip = '$NDK/llvm-strip'
 pkg-config = 'pkg-config'
 
-[properties]
-sys_root = '$NDK/../sysroot'
-
 [host_machine]
 system = 'android'
 cpu_family = 'aarch64'

@@ -1,10 +1,10 @@
 #!/bin/bash -e
 set -euo pipefail
-
+# install deps
 apt build-dep mesa -y && apt-get install wget zip git pkg-config
-
+# export mesa version
 export MESA=26.2.0-V2
-
+# remove old workdir to stop conflicts
 rm -rf turnip_workdir
 
 mkdir turnip_workdir
@@ -12,17 +12,17 @@ mkdir turnip_workdir
 cd turnip_workdir
 
 rm -rf r29
-
+# download the NDK
 wget -O "ndk.tar.gz" "https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz" 
 
 tar -xzvf ndk.tar.gz
 
 rm -rf Mesa-android
-
+# Clone mesa
 git clone https://gitlab.freedesktop.org/mesa/mesa.git --depth=1 Mesa-Android
 
 cd Mesa-Android
-
+# create custom patch
 cat <<'PATCH_EOF' > patch.patch
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Mesa Contributor <contributor@example.com>

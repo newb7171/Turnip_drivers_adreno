@@ -1,7 +1,7 @@
 #!/bin/bash -e
 set -euo pipefail
 
-apt build-dep mesa -y && apt install wget zip git pkg-config
+apt build-dep mesa -y && apt-get install wget zip git pkg-config
 
 export MESA=26.2.0-V2
 

@@ -98,7 +98,8 @@ meson setup build-android-aarch64 \
     -Dvulkan-beta=true \
     -Dfreedreno-kmds=kgsl \
     -Degl=disabled \
-    -Dandroid-libbacktrace=disabled
+    -Dandroid-libbacktrace=disabled \
+    -Dandroid-strict=false
 
 wget "$PATCH_2"
 

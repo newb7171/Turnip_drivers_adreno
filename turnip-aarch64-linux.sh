@@ -302,9 +302,9 @@ ninja -C build-android-aarch64 install
 
 cd /root/turnip/lib
 
-patchelf --set-soname vulkan.ad07xx.so libvulkan_freedreno.so
+patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
 
-mv libvulkan_freedreno.so vulkan.ad07xx.so
+mv libvulkan_freedreno.so vulkan.adreno.so
 
 cat <<EOF > meta.json
 {
@@ -316,7 +316,7 @@ cat <<EOF > meta.json
   "vendor": "Mesa",
   "driverVersion": "Vulkan 1.4.335",
   "minApi": 28,
-  "libraryName": "vulkan.ad07xx.so"
+  "libraryName": "vulkan.adreno.so"
 }
 EOF
 

@@ -15,7 +15,7 @@ sed -i '/^Types:/ s/deb/deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
 
 apt-get update
 
-apt build-dep mesa -y
+apt-get build-dep mesa -y
 
 apt-get install -y \
     pkg-config \

@@ -3,7 +3,7 @@ set -euo pipefail
 
 WORKDIR="/root/turnip_workdir"
 NDK="/root/turnip_workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/bin"
-MESA="v26.2.0-V3"
+MESA="26.2.0-V3"
 MESA_SOURCE="https://gitlab.freedesktop.org/mesa/mesa.git"
 NDK_DOWNLOAD="https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz"
 PATCH_DOWNLOAD="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/patch.patch"
@@ -122,7 +122,7 @@ cat <<EOF > meta.json
 }
 EOF
 
-zip -9 "$OUTPUT_DIR/Turnip-$MESA.zip" \
+zip -9 "$OUTPUT_DIR/Turnip-v$MESA.zip" \
     vulkan.adreno.so \
     meta.json
 

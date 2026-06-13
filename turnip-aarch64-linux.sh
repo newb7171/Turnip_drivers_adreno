@@ -6,10 +6,10 @@ NDK="/root/turnip_workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/bin"
 MESA="26.2.0-V3"
 MESA_SOURCE="https://gitlab.freedesktop.org/mesa/mesa.git"
 NDK_DOWNLOAD="https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz"
-PATCH_DOWNLOAD="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/patch.patch"
+PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/patch.patch"
 OUTPUT_DIR="/root/turnip"
 NDK_NAME="android-ndk-r29-linux-aarch64.tar.gz"
-
+PATCH_2="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/libarchive.patch"
 
 sed -i '/^Types:/ s/deb/deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
 
@@ -39,7 +39,7 @@ git clone "$MESA_SOURCE" --depth=1
 
 cd mesa
 
-wget "$PATCH_DOWNLOAD"
+wget "$PATCH_1"
 
 git apply patch.patch
 
@@ -100,7 +100,7 @@ meson setup build-android-aarch64 \
     -Degl=disabled \
     -Dandroid-libbacktrace=disabled
 
-wget https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/libarchive.patch
+wget "$PATCH_2"
 
 git apply libarchive.patch
 

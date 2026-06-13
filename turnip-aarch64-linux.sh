@@ -1,7 +1,7 @@
 #!/bin/bash -e
 set -euo pipefail
 # install deps
-apt build-dep mesa -y && apt-get install wget zip git pkg-config
+apt-get build-dep mesa -y && apt-get install wget zip git pkg-config
 # export mesa version
 export MESA=26.2.0-V2
 # remove old workdir to stop conflicts

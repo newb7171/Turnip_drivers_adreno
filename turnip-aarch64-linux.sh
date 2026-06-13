@@ -5,7 +5,10 @@ apt build-dep mesa -y && apt install wget zip git pkg-config
 
 export MESA=26.2.0-V2
 
+rm -rf turnip_workdir
+
 mkdir turnip_workdir
+
 cd turnip_workdir
 
 rm -rf r29

@@ -10,6 +10,9 @@ PATCH_DOWNLOAD="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno
 OUTPUT_DIR="/root/turnip"
 NDK_NAME="android-ndk-r29-linux-aarch64.tar.gz"
 
+
+sed -i '/^Types:/ s/deb/deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+
 apt-get update
 
 apt build-dep mesa -y

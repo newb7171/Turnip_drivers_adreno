@@ -325,3 +325,5 @@ mkdir /root/build
 zip -9 "/root/build/Turnip-v$MESA.zip" vulkan.ad07xx.so meta.json
 
 echo "Build complete."
+
+exit 0

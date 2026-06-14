@@ -120,7 +120,7 @@ mv libvulkan_freedreno.so vulkan.adreno.so
 cat <<EOF > meta.json
 {
   "schemaVersion": 1,
-  "name": "Mesa Turnip $MESA",
+  "name": "Mesa Turnip v$MESA",
   "description": "Built from source",
   "author": "JustCallMeJade",
   "packageVersion": "1",

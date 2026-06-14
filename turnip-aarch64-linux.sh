@@ -13,11 +13,11 @@ sed -i '/^Types:/ s/deb/deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
 
 apt-get update
 
-apt-get build-dep mesa -y
+apt-get build-dep mesa -y -qq
 
-apt build-dep libarchive -y
+apt build-dep libarchive -y -qq
 
-apt-get install -y pkg-config git cmake wget zip patchelf libarchive-dev expat libxml2-dev
+apt-get install -y pkg-config git cmake wget zip patchelf libarchive-dev expat libxml2-dev -qq
 
 rm -rf /root/r29
 rm -rf /root/mesa

@@ -102,8 +102,7 @@ meson setup build-android-aarch64 \
     -Dvulkan-beta=true \
     -Dfreedreno-kmds=kgsl \
     -Degl=disabled \
-    -Dandroid-libbacktrace=disabled \
-    -Dandroid-strict=false
+    -Dandroid-libbacktrace=disabled
 
 ninja -C build-android-aarch64 -j4 install
 

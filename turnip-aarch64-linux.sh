@@ -77,22 +77,21 @@ EOF
 
 rm -rf "$OUTPUT_DIR"
 
-meson setup build-android-aarch64 
---cross-file android-aarch64.txt 
---native-file native.txt 
---prefix "$OUTPUT_DIR" 
--Dbuildtype=release 
--Dstrip=true 
--Dplatforms=android 
--Dplatform-sdk-version=35 
--Dandroid-stub=true 
--Dgallium-drivers= 
--Dvulkan-drivers=freedreno 
--Dvulkan-beta=true 
--Dfreedreno-kmds=kgsl 
--Degl=disabled 
--Dandroid-libbacktrace=disabled
-
+meson setup build-android-aarch64 \
+  --cross-file android-aarch64.txt \
+  --native-file native.txt \
+  --prefix "$OUTPUT_DIR" \
+  -Dbuildtype=release \
+  -Dstrip=true \
+  -Dplatforms=android \
+  -Dplatform-sdk-version=35 \
+  -Dandroid-stub=true \
+  -Dgallium-drivers= \
+  -Dvulkan-drivers=freedreno \
+  -Dvulkan-beta=true \
+  -Dfreedreno-kmds=kgsl \
+  -Degl=disabled \
+  -Dandroid-libbacktrace=disabled
 ninja -C build-android-aarch64 -j4 install
 
 cd "$OUTPUT_DIR/lib"

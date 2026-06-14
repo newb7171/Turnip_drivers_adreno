@@ -109,7 +109,7 @@ git add -A
 
 git commit -m "Removed problematic file"
 
-ninja -C build-android-aarch64 -j5 install
+ninja -C build-android-aarch64 -j4 install
 
 cd "$OUTPUT_DIR/lib"
 

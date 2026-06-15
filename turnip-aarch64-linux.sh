@@ -11,6 +11,8 @@ NDK_NAME="android-ndk-r29-linux-aarch64.tar.gz"
 
 sed -i '/^Types:/ s/deb/deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
 
+sed -i '/^Types:/ s/deb/deb deb-src/' /etc/apt/sources.list.d/debian.sources
+
 apt-get update
 
 apt-get build-dep mesa -y -qq

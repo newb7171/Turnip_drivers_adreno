@@ -1,0 +1,148 @@
+name: Build Turnip
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Install build dependencies
+        run: |
+          sudo sed -i '/^Types:/ s/deb/deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources || true
+
+          sudo apt-get update
+
+          sudo apt-get build-dep mesa -y -qq
+          sudo apt-get build-dep libarchive -y -qq
+
+          sudo apt-get install -y \
+            pkg-config \
+            git \
+            cmake \
+            wget \
+            zip \
+            unzip \
+            patchelf \
+            libarchive-dev \
+            expat \
+            libxml2-dev \
+            -qq
+
+      - name: Download Android NDK
+        run: |
+          wget -q https://dl.google.com/android/repository/android-ndk-r29-linux.zip
+          unzip -q android-ndk-r29-linux.zip
+
+      - name: Clone Mesa
+        run: |
+          git clone https://gitlab.freedesktop.org/mesa/mesa.git --depth=1
+
+      - name: Build Turnip
+        run: |
+          set -euo pipefail
+
+          NDK="$GITHUB_WORKSPACE/android-ndk-r29/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          MESA="26.2.0-V3"
+          PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/patch.patch"
+          OUTPUT_DIR="$GITHUB_WORKSPACE/turnip"
+
+          cd mesa
+
+          wget -q "$PATCH_1"
+
+          git apply patch.patch
+
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+
+          git add -A
+          git commit -m "Added patch" || true
+
+          echo "#define TUGEN8_DRV_VERSION \"$MESA\"" > src/freedreno/vulkan/tu_version.h
+
+          rm -rf build-android-aarch64
+
+          cat <<EOF > android-aarch64.txt
+          [binaries]
+          ar = '$NDK/llvm-ar'
+          c = '$NDK/aarch64-linux-android35-clang'
+          cpp = ['$NDK/aarch64-linux-android35-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
+          c_ld = '$NDK/ld.lld'
+          cpp_ld = '$NDK/ld.lld'
+          strip = '$NDK/llvm-strip'
+          pkg-config = 'pkg-config'
+
+          [host_machine]
+          system = 'android'
+          cpu_family = 'aarch64'
+          cpu = 'armv8'
+          endian = 'little'
+          EOF
+
+          cat <<EOF > native.txt
+          [build_machine]
+          c = 'clang'
+          cpp = 'clang++'
+          ar = 'llvm-ar'
+          strip = 'llvm-strip'
+          c_ld = 'ld.lld'
+          cpp_ld = 'ld.lld'
+
+          [host_machine]
+          system = 'linux'
+          cpu_family = 'x86_64'
+          cpu = 'x86_64'
+          endian = 'little'
+          EOF
+
+          rm -rf "$OUTPUT_DIR"
+
+          meson setup build-android-aarch64 \
+            --cross-file android-aarch64.txt \
+            --native-file native.txt \
+            --prefix "$OUTPUT_DIR" \
+            -Dbuildtype=release \
+            -Dstrip=true \
+            -Dplatforms=android \
+            -Dplatform-sdk-version=35 \
+            -Dandroid-stub=true \
+            -Dgallium-drivers= \
+            -Dvulkan-drivers=freedreno \
+            -Dvulkan-beta=true \
+            -Dfreedreno-kmds=kgsl \
+            -Degl=disabled \
+            -Dandroid-libbacktrace=disabled
+
+          ninja -C build-android-aarch64 -j4 install
+
+          cd "$OUTPUT_DIR/lib"
+
+          patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
+
+          mv libvulkan_freedreno.so vulkan.adreno.so
+
+          cat <<EOF > meta.json
+          {
+            "schemaVersion": 1,
+            "name": "Mesa Turnip v$MESA",
+            "description": "Built from source",
+            "author": "JustCallMeJade",
+            "packageVersion": "1",
+            "vendor": "Mesa3d",
+            "driverVersion": "Vulkan 1.4.335",
+            "minApi": 28,
+            "libraryName": "vulkan.adreno.so"
+          }
+          EOF
+
+          zip -9 "$OUTPUT_DIR/Turnip-v$MESA.zip" \
+            vulkan.adreno.so \
+            meta.json
+
+      - name: Upload Turnip ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Turnip
+          path: turnip/Turnip-*.zip

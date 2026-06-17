@@ -30,6 +30,7 @@ jobs:
             libxml2-dev \
             meson \
             ninja-build \
+            ccache \
             -qq
 
       - name: Download Android NDK
@@ -53,11 +54,10 @@ jobs:
           cd mesa
 
           wget -q "$PATCH_1"
-          git apply patch.patch
+          git apply patch.patch || true
 
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-
           git add -A
           git commit -m "Added patch" || true
 
@@ -67,11 +67,23 @@ jobs:
 
           cat > android-aarch64.txt <<EOF
           [binaries]
-          ar = '$NDK/llvm-ar'
+          ar = 'llvm-ar'
 
-          c = ['$NDK/aarch64-linux-android35-clang', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
+          c = ['ccache', '$NDK/aarch64-linux-android35-clang',
+               '-fno-exceptions',
+               '-fno-unwind-tables',
+               '-fno-asynchronous-unwind-tables',
+               '--start-no-unused-arguments',
+               '-static-libstdc++',
+               '--end-no-unused-arguments']
 
-          cpp = ['$NDK/aarch64-linux-android35-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
+          cpp = ['ccache', '$NDK/aarch64-linux-android35-clang++',
+                 '-fno-exceptions',
+                 '-fno-unwind-tables',
+                 '-fno-asynchronous-unwind-tables',
+                 '--start-no-unused-arguments',
+                 '-static-libstdc++',
+                 '--end-no-unused-arguments']
 
           c_ld = '$NDK/ld.lld'
           cpp_ld = '$NDK/ld.lld'
@@ -105,25 +117,29 @@ jobs:
           rm -rf "$OUTPUT_DIR"
 
           meson setup build-android-aarch64 \
-  --cross-file android-aarch64.txt \
-  --native-file native.txt \
-  --prefix "$OUTPUT_DIR" \
-  -Dbuildtype=release \
-  -Dstrip=true \
-  -Dplatforms=android \
-  -Dplatform-sdk-version=35 \
-  -Dandroid-stub=true \
-  -Dgallium-drivers= \
-  -Dvulkan-drivers=freedreno \
-  -Dvulkan-beta=true \
-  -Dfreedreno-kmds=kgsl \
-  -Degl=disabled \
-  -Dandroid-libbacktrace=disabled \
-  -Dzstd=disabled
-  
-  ninja -C build-android-aarch64 -j4 install
+            --cross-file android-aarch64.txt \
+            --native-file native.txt \
+            --prefix "$OUTPUT_DIR" \
+            -Dbuildtype=release \
+            -Dstrip=true \
+            -Dplatforms=android \
+            -Dplatform-sdk-version=35 \
+            -Dandroid-stub=true \
+            -Dgallium-drivers= \
+            -Dvulkan-drivers=freedreno \
+            -Dvulkan-beta=true \
+            -Dfreedreno-kmds=kgsl \
+            -Degl=disabled \
+            -Dandroid-libbacktrace=disabled \
+            -Dzstd=disabled \
+            -Dccache=enabled
 
-          cd "$OUTPUT_DIR/lib"
+          ninja -C build-android-aarch64 -j$(nproc)
+          ninja -C build-android-aarch64 install
+
+      - name: Package output
+        run: |
+          cd "$GITHUB_WORKSPACE/turnip/lib"
 
           patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
           mv libvulkan_freedreno.so vulkan.adreno.so
@@ -142,12 +158,12 @@ jobs:
           }
           EOF
 
-          zip -9 "$OUTPUT_DIR/Turnip-v$MESA.zip" \
+          zip -9 "$GITHUB_WORKSPACE/turnip/Turnip-v$MESA.zip" \
             vulkan.adreno.so \
             meta.json
 
-      - name: Upload Turnip ZIP
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Turnip
-          path: turnip/Turnip-*.zip
+          path: turnip/*.zip

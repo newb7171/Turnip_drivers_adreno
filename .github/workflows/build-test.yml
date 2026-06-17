@@ -120,7 +120,7 @@ jobs:
             -Degl=disabled \
             -Dandroid-libbacktrace=disabled
 
-          ninja -C build-android-aarch64 -j4 install
+          ninja -C -k build-android-aarch64 -j4 install
 
           cd "$OUTPUT_DIR/lib"
 

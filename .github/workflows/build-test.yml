@@ -17,21 +17,7 @@ jobs:
           sudo apt-get build-dep mesa -y -qq
           sudo apt-get build-dep libarchive -y -qq
 
-          sudo apt-get install -y \
-            pkg-config \
-            git \
-            cmake \
-            wget \
-            zip \
-            unzip \
-            patchelf \
-            libarchive-dev \
-            expat \
-            libxml2-dev \
-            meson \
-            ninja-build \
-            ccache \
-            -qq
+          sudo apt-get install -y pkg-config git cmake wget zip unzip patchelf libarchive-dev expat libxml2-dev meson ninja-build ccache spirv-tools
 
       - name: Download Android NDK
         run: |

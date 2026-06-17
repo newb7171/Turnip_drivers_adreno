@@ -69,30 +69,14 @@ jobs:
           [binaries]
           ar = '$NDK/llvm-ar'
 
-          c = [
-            '$NDK/aarch64-linux-android35-clang',
-            '-fno-exceptions',
-            '-fno-unwind-tables',
-            '-fno-asynchronous-unwind-tables',
-            '--start-no-unused-arguments',
-            '-static-libstdc++',
-            '--end-no-unused-arguments'
-          ]
+          c = ['$NDK/aarch64-linux-android35-clang', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
 
-          cpp = [
-            '$NDK/aarch64-linux-android35-clang++',
-            '-fno-exceptions',
-            '-fno-unwind-tables',
-            '-fno-asynchronous-unwind-tables',
-            '--start-no-unused-arguments',
-            '-static-libstdc++',
-            '--end-no-unused-arguments'
-          ]
+          cpp = ['$NDK/aarch64-linux-android35-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
 
           c_ld = '$NDK/ld.lld'
           cpp_ld = '$NDK/ld.lld'
           strip = '$NDK/llvm-strip'
-          pkgconfig = 'pkg-config'
+          pkg-config = 'pkg-config'
 
           [host_machine]
           system = 'android'
@@ -109,7 +93,7 @@ jobs:
           strip = 'llvm-strip'
           c_ld = 'ld.lld'
           cpp_ld = 'ld.lld'
-          pkgconfig = 'pkg-config'
+          pkg-config = 'pkg-config'
 
           [host_machine]
           system = 'linux'

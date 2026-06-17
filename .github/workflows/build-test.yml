@@ -118,7 +118,8 @@ jobs:
             -Dvulkan-beta=true \
             -Dfreedreno-kmds=kgsl \
             -Degl=disabled \
-            -Dandroid-libbacktrace=disabled
+            -Dandroid-libbacktrace=disabled \
+            -Dzstd=disabled
 
           ninja -k 10826 -C build-android-aarch64 -j4 install
 

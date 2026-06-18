@@ -7,6 +7,9 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-24.04-arm
@@ -25,20 +28,27 @@ jobs:
 
       - name: Run build script
         run: |
-          chmod +x turnip-aarch64-linux.sh
-          ./turnip-aarch64-linux.sh
+          chmod +x Actions-github.sh
+          ./Actions-github.sh
 
-      - name: Debug output
+      - name: Debug zip output
         run: |
-          echo "Where zip actually is:"
-          find / -name "*.zip" 2>/dev/null || true
-          echo "Workspace view:"
-          find . -name "*.zip" -print
+          echo "Searching for zip files..."
+          find turnip_workdir -type f -name "*.zip" -print
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: turnip-build
-          path: |
-            turnip_workdir/turnip/*.zip
+          path: turnip_workdir/turnip/*.zip
           if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.BUILD_VERSION }}
+          name: Turnip ${{ env.BUILD_VERSION }}
+          files: turnip_workdir/turnip/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

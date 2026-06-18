@@ -90,7 +90,7 @@ meson setup build-android-aarch64 \
     --cross-file android-aarch64.txt \
     --native-file native.txt \
     --prefix "$workdir/turnip" \
-    -Dbuildtype=release \
+    -Dbuildtype=debugoptimized \
     -Dstrip=true \
     -Dplatforms=android \
     -Dvideo-codecs=all \

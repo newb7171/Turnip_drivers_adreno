@@ -1,56 +1,77 @@
 #!/bin/bash
 
-NDK="/root/r29/toolchains/llvm/prebuilt/linux-x86_64/bin"
-MESA="26.2.0-V3"
-MESA_SOURCE="https://gitlab.freedesktop.org/mesa/mesa.git"
-NDK_DOWNLOAD="https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz"
+set -euo pipefail
+
+workdir="$(pwd)/turnip_workdir"
+ndk="$workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/bin"
+sdkver="34"
+mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
+BUILD_VERSION="26.2.0-V3"
 PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/patch.patch"
-OUTPUT_DIR="/root/turnip"
 NDK_NAME="android-ndk-r29-linux-aarch64.tar.gz"
 
-sed -i '/^Types:/ s/deb/deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
+echo "Only works in debian!!! press Ctrl + C to exit"
+
+echo "Installing build dependencies..."
+
+sed -i '/^Types:/ s/deb$/deb deb-src/' /etc/apt/sources.list.d/debian.sources
 
 apt-get update
 
 apt-get build-dep mesa -y -qq
 
-apt build-dep libarchive -y -qq
+apt-get build-dep libarchive -y -qq
 
 apt-get install -y pkg-config git cmake wget zip patchelf libarchive-dev expat libxml2-dev -qq
 
-rm -rf /root/r29
-rm -rf /root/mesa
-rm -f /root/android-ndk-r29-linux-aarch64.tar.gz
-rm -rf /root/turnip
+mkdir -p "$workdir"
+cd "$workdir"
 
-wget "$NDK_DOWNLOAD"
+mkdir -p "$workdir/turnip"
 
-tar -xzvf "$NDK_NAME"
+# Clean up any previous build artifacts
+rm -rf "$workdir/r29"
+rm -rf "$workdir/mesa"
+rm -f "$workdir/$NDK_NAME"
+rm -rf "$workdir/turnip"
+mkdir -p "$workdir/turnip"
 
-git clone "$MESA_SOURCE" --depth=1
+wget https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz
 
+tar -xzf android-ndk-r29-linux-aarch64.tar.gz
+
+git clone $mesasrc --depth=1
 cd mesa
 
+echo "Applying patch..."
 wget "$PATCH_1"
-
 git apply patch.patch
-
 git add -A
-
 git commit -m "Added patch"
 
-echo "#define TUGEN8_DRV_VERSION "$MESA"" > src/freedreno/vulkan/tu_version.h
+echo "Pushing TU_VERSION..."
+echo "#define TUGEN8_DRV_VERSION \"$BUILD_VERSION\"" > ./src/freedreno/vulkan/tu_version.h
 
-rm -rf build-android-aarch64
+export PATH="$workdir/bin:$ndk:$PATH"
+export CC=clang
+export CXX=clang++
+export AR=llvm-ar
+export RANLIB=llvm-ranlib
+export STRIP=llvm-strip
+export OBJDUMP=llvm-objdump
+export OBJCOPY=llvm-objcopy
+export LDFLAGS="-fuse-ld=lld"
+
+echo "Generating Build files..."
 
 cat <<EOF > android-aarch64.txt
 [binaries]
-ar = '$NDK/llvm-ar'
-c = '$NDK/aarch64-linux-android35-clang'
-cpp = ['$NDK/aarch64-linux-android35-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
-c_ld = '$NDK/ld.lld'
-cpp_ld = '$NDK/ld.lld'
-strip = '$NDK/llvm-strip'
+ar = '$ndk/llvm-ar'
+c = '$ndk/aarch64-linux-android35-clang'
+cpp = ['$ndk/aarch64-linux-android35-clang++', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments']
+c_ld = '$ndk/ld.lld'
+cpp_ld = '$ndk/ld.lld'
+strip = '$ndk/llvm-strip'
 pkg-config = 'pkg-config'
 
 [host_machine]
@@ -60,65 +81,72 @@ cpu = 'armv8'
 endian = 'little'
 EOF
 
-cat <<EOF > native.txt
-[build_machine]
-c = 'clang'
-cpp = 'clang++'
-ar = 'llvm-ar'
-strip = 'llvm-strip'
+cat <<EOF >"native.txt"
+[binaries]
+c = '/usr/bin/clang'
+cpp = '/usr/bin/clang++'
+ar = '/usr/bin/llvm-ar'
+strip = '/usr/bin/llvm-strip'
 c_ld = 'ld.lld'
 cpp_ld = 'ld.lld'
+pkg-config = '/usr/bin/pkg-config'
+
+[build_machine]
 system = 'linux'
 cpu_family = 'aarch64'
 cpu = 'armv8'
 endian = 'little'
 EOF
 
-rm -rf "$OUTPUT_DIR"
+echo "Setting up and compiling..."
+
+rm -rf build-android-aarch64
 
 meson setup build-android-aarch64 \
-  --cross-file android-aarch64.txt \
-  --native-file native.txt \
-  --prefix "$OUTPUT_DIR" \
-  -Dbuildtype=release \
-  -Dstrip=true \
-  -Dplatforms=android \
-  -Dplatform-sdk-version=35 \
-  -Dandroid-stub=true \
-  -Dgallium-drivers= \
-  -Dvulkan-drivers=freedreno \
-  -Dvulkan-beta=true \
-  -Dfreedreno-kmds=kgsl \
-  -Degl=disabled \
-  -Dandroid-libbacktrace=disabled \
-  -Dzstd=disabled
-  
+    --cross-file "android-aarch64.txt" \
+    --native-file "native.txt" \
+    --prefix "$workdir/turnip" \
+    -Dbuildtype=release \
+    -Dstrip=true \
+    -Dplatforms=android \
+    -Dvideo-codecs= \
+    -Dplatform-sdk-version=35 \
+    -Dandroid-stub=true \
+    -Dgallium-drivers= \
+    -Dvulkan-drivers=freedreno \
+    -Dvulkan-beta=true \
+    -Dfreedreno-kmds=kgsl \
+    -Degl=disabled \
+    -Dandroid-libbacktrace=disabled \
+    -Dzstd=disabled \
+    -Dspirv-tools=disabled
+
 ninja -C build-android-aarch64 -j5 install
 
-cd "$OUTPUT_DIR/lib"
+cd "$workdir/turnip/lib"
+
+echo "Packaging..."
 
 patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
 
 mv libvulkan_freedreno.so vulkan.adreno.so
 
-cat <<EOF > meta.json
+cat <<EOF >"meta.json"
 {
-"schemaVersion": 1,
-"name": "Mesa Turnip v$MESA",
-"description": "Built from source",
-"author": "JustCallMeJade",
-"packageVersion": "1",
-"vendor": "Mesa3d",
-"driverVersion": "Vulkan 1.4.335",
-"minApi": 28,
-"libraryName": "vulkan.adreno.so"
+  "schemaVersion": 1,
+  "name": "Mesa Turnip v$BUILD_VERSION",
+  "description": "Built from source",
+  "author": "JustCallMeJade",
+  "packageVersion": "1",
+  "vendor": "Mesa3d",
+  "driverVersion": "Vulkan 1.4.335",
+  "minApi": 28,
+  "libraryName": "vulkan.adreno.so"
 }
 EOF
 
-zip -9 "$OUTPUT_DIR/Turnip-v$MESA.zip" 
-vulkan.adreno.so 
-meta.json
+zip -9 "$workdir/turnip/Turnip-v$BUILD_VERSION.zip" vulkan.adreno.so meta.json
 
-echo "Build complete."
+echo "build complete."
 
 exit 0

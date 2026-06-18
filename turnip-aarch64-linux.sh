@@ -31,7 +31,7 @@ mkdir -p "$workdir/turnip"
 # Clean up any previous build artifacts
 rm -rf "$workdir/r29"
 rm -rf "$workdir/mesa"
-rm -f "$workdir/$NDK_NAME"
+rm -f "$workdir/android-ndk-r29-linux-aarch64.tar.gz"
 rm -rf "$workdir/turnip"
 mkdir -p "$workdir/turnip"
 

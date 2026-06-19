@@ -17,7 +17,7 @@ apt-get update
 apt-get build-dep mesa -y -qq
 apt-get build-dep libarchive -y -qq
 
-apt-get install -y pkg-config git cmake wget zip patchelf libarchive-dev expat libxml2-dev -qq
+apt-get install -y pkg-config git cmake wget zip patchelf libarchive-dev expat libxml2-dev libclc-21-dev -qq
 
 mkdir -p "$workdir"
 cd "$workdir"

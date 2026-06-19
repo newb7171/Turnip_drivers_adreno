@@ -19,8 +19,8 @@ jobs:
 
       - name: Run build script
         run: |
-          chmod +x Build-turnip.sh
-          ./Build-turnip.sh
+          chmod +x Build-vulkan.sh
+          ./Build-vulkan.sh
 
       - name: Debug zip output
         run: |

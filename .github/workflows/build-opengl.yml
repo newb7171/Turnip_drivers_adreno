@@ -1,4 +1,4 @@
-name: Turnip adrenotools
+name: Turnip opengl
 
 on:
   workflow_dispatch:
@@ -20,7 +20,7 @@ jobs:
       - name: Run build script
         run:
           chmod +x Build-opengl.sh
-          ./Build-opengl.sh
+          ./build-opengl.sh
 
       - name: Debug zip output
         run: |

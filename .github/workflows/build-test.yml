@@ -21,6 +21,8 @@ jobs:
         run: |
           chmod +x Build-vulkan.sh
           ./Build-vulkan.sh
+          chmod Build-opengl.sh
+          ./Build-opengl.sh
 
       - name: Debug zip output
         run: |

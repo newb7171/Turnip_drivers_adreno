@@ -163,7 +163,7 @@ Version: $BUILD_VERSION
 Architecture: aarch64
 Maintainer: JustCallMeJade
 Installed-Size: $INSTALLED_SIZE
-Depends: libc6
+Depends: pkg-config
 Section: libs
 Priority: optional
 Description: Mesa Turnip Vulkan driver for Adreno GPUs

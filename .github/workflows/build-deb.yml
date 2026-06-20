@@ -1,0 +1,44 @@
+name: Turnip deb build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04-arm
+
+    container:
+      image: debian:sid
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run build script
+        run: |
+          chmod +x Build-deb.sh
+          ./Build-deb.sh
+
+      - name: Debug deb output
+        run: |
+          find turnip_workdir -type f -name "*.deb" -print
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: turnip-build
+          path: turnip_workdir/turnip/*.deb
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: Turnip-v${{ env.BUILD_VERSION }}
+          name: Turnip-v${{ env.BUILD_VERSION }}
+          files: turnip_workdir/turnip/*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

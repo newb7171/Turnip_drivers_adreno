@@ -147,7 +147,7 @@ cat <<EOF > "$ICDDIR/freedreno_icd.aarch64.json"
 {
     "file_format_version": "1.0.0",
     "ICD": {
-        "library_path": "$PREFIX/usr/aarch64-linux-gnu/lib/vulkan.adreno.so",
+        "library_path": "$PREFIX/usr/lib/vulkan.adreno.so",
         "api_version": "1.4.335"
     }
 }

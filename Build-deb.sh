@@ -128,9 +128,6 @@ cd "$workdir/turnip/lib"
 
 echo "packaging turnip as .deb"
 
-patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
-mv libvulkan_freedreno.so vulkan.adreno.so
-
 # Set up deb staging directory
 PREFIX="data/data/com.termux/files"
 PKGDIR="$workdir/deb_staging"
@@ -141,14 +138,14 @@ DEBIANDIR="$PKGDIR/DEBIAN"
 mkdir -p "$LIBDIR" "$ICDDIR" "$DEBIANDIR"
 
 # Place the driver
-cp vulkan.adreno.so "$LIBDIR/vulkan.adreno.so"
+cp vulkan.adreno.so "$LIBDIR/libvulkan_freedreno.so"
 
 # Generate the ICD JSON
 cat <<EOF > "$ICDDIR/freedreno_icd.aarch64.json"
 {
     "file_format_version": "1.0.0",
     "ICD": {
-        "library_path": "/$PREFIX/usr/lib/vulkan.adreno.so",
+        "library_path": "/$PREFIX/usr/lib/libvulkan_freedreno.so",
         "api_version": "1.4.335"
     }
 }

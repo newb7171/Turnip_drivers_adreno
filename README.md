@@ -12,7 +12,7 @@ Compiled by Github actions.
 
 
 
-Updates every Saturday
+Updates every Day or whenever
 
 
 
@@ -68,8 +68,7 @@ https://github.com/Vauzi-17
 
 710 / 720 / 722 / 725 / 720G / 730 / 740 / 750 / 752 / 760 / 780
 
-
-
+(8xx not supported)
 
 
 

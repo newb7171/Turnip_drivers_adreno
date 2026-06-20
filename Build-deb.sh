@@ -109,7 +109,7 @@ meson setup build-android-aarch64 \
     --prefix "$workdir/turnip" \
     -Dbuildtype=debugoptimized \
     -Dstrip=true \
-    -Dplatforms=android,x11 \
+    -Dplatforms=x11 \
     -Dvideo-codecs=all \
     -Dplatform-sdk-version=35 \
     -Dandroid-stub=true \

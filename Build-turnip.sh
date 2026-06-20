@@ -8,7 +8,6 @@ mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 BUILD_VERSION="26.2.0_V4"
 PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/Gpu-Hacks.patch"
 PATCH_2="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/KGSL-hacks-whitebelyash.diff"
-PATCH_3="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/tu_gen8_clean.patch"
 
 echo "Only works in debian!!! press Ctrl + C to exit"
 echo "Installing build dependencies..."
@@ -30,7 +29,7 @@ rm -rf "$workdir/r29"
 rm -rf "$workdir/mesa"
 rm -f "$workdir/android-ndk-r29-linux-aarch64.tar.gz"
 
-wget https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz
+wget -q -nv https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz
 tar -xzf android-ndk-r29-linux-aarch64.tar.gz
 
 git clone $mesasrc --depth=1
@@ -39,10 +38,8 @@ cd mesa
 echo "Applying patch..."
 wget "$PATCH_1"
 wget "$PATCH_2"
-wget "$PATCH_3"
 git apply Gpu-Hacks.patch
-patch -p1 whitebelyash-patch-experimental.diff
-patch -p1 -f tu_gen8_clean.patch
+patch -p1 KGSL-hacks-whitebelyash.diff
 git add -A
 rm -f patch.patch && rm -f KGSL-hacks-whitebelyash.diff
 

@@ -1,33 +1,25 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Mesa Contributor <contributor@example.com>
 Date: Fri, 12 Jun 2026 00:00:00 +0000
-Subject: [PATCH] freedreno: add Adreno 7xx and 8xx GPU entries
+Subject: [PATCH] freedreno: add Adreno 710, 720, and 722 GPU entries
 
-Add support for Adreno 7xx series (710, 720, 722) and 8xx series (810, 829,
-830, 840, X2-85) GPUs to freedreno_devices.py.
+Add support for Adreno 710 (FD710), 720 (FD720), and 722 (FD722) to
+freedreno_devices.py. Magic register values were derived from real
+blob command streams captured as .rd traces and decoded with cffdump.
 
-7xx Support:
-Magic register values were derived from real blob command streams captured
-as .rd traces and decoded with cffdump.
-
-Chip IDs (7xx):
+Chip IDs:
   FD710: 0x07010000 / wildcard 0xffff07010000
   FD720: 0x43020000 / wildcard 0xffff43020000
   FD722: 0x43020100 / wildcard 0xffff43020100
 
-GMEM sizes (from KGSL_PROP_DEVICE_INFO, 7xx):
+GMEM sizes (from KGSL_PROP_DEVICE_INFO):
   FD710: 0x80000  (512 KiB)
   FD720: 0x100000 (1 MiB)
   FD722: 0x100000 (1 MiB)
 
-All 7xx use CHIP.A7XX with the a7xx_base + a7xx_gen1 feature sets,
+All three use CHIP.A7XX with the a7xx_base + a7xx_gen1 feature sets,
 3 CCUs, 32 VSC pipes, 32 KiB shared memory, wave_granularity=2, and
 fibers_per_sp = 128*2*16.
-
-8xx Support:
-Includes Adreno 810 (1 CCU), 830 (6 CCUs), 829 (4 CCUs), 840 (6 CCUs),
-and X2-85 (8 CCUs). All 8xx devices use CHIP.A8XX with base features
-and kernel-managed register programming.
 
 Entries are inserted immediately before the FD725 block.
 
@@ -35,7 +27,7 @@ Signed-off-by: Mesa Contributor <contributor@example.com>
 ---
 --- a/src/freedreno/common/freedreno_devices.py
 +++ b/src/freedreno/common/freedreno_devices.py
-@@ -962,6 +962,581 @@
+@@ -962,6 +962,229 @@
          [A6XXRegs.REG_A6XX_UCHE_UNKNOWN_0E12, 0],
      ]
  
@@ -262,198 +254,9 @@ Signed-off-by: Mesa Contributor <contributor@example.com>
 +
 +# END FD710_FD720_FD722_CUSTOM
 +
-+# BEGIN A8XX_SUPPORT
-+
-+a8xx_base = GPUProps(
-+        has_dp2acc = False,
-+        reg_size_vec4 = 96,
-+        has_rt_workaround = False,
-+        supports_double_threadsize = False,
-+        has_dual_wave_dispatch = True,
-+    )
-+
-+# For a8xx, the chicken bit and most other non-ctx reg
-+# programming moves into the kernel, and what remains
-+# should be easier to share between devices
-+a8xx_base_raw_magic_regs = [
-+        [A6XXRegs.REG_A8XX_GRAS_BIN_FOVEAT_XY_FDM_OFFSET + 0, 0x00000000],
-+        [A6XXRegs.REG_A8XX_GRAS_BIN_FOVEAT_XY_FDM_OFFSET + 1, 0x00000000],
-+        [A6XXRegs.REG_A8XX_GRAS_BIN_FOVEAT_XY_FDM_OFFSET + 2, 0x00000000],
-+        [A6XXRegs.REG_A8XX_GRAS_BIN_FOVEAT_XY_FDM_OFFSET + 3, 0x00000000],
-+        [A6XXRegs.REG_A8XX_GRAS_BIN_FOVEAT_XY_FDM_OFFSET + 4, 0x00000000],
-+        [A6XXRegs.REG_A8XX_GRAS_BIN_FOVEAT_XY_FDM_OFFSET + 5, 0x00000000],
-+
-+        [A6XXRegs.REG_A6XX_RB_UNKNOWN_8818,   0x00000000],
-+        [A6XXRegs.REG_A6XX_RB_UNKNOWN_8819,   0x00000000],
-+        [A6XXRegs.REG_A6XX_RB_UNKNOWN_881A,   0x00000000],
-+        [A6XXRegs.REG_A6XX_RB_UNKNOWN_881B,   0x00000000],
-+        [A6XXRegs.REG_A6XX_RB_UNKNOWN_881C,   0x00000000],
-+        [A6XXRegs.REG_A6XX_RB_UNKNOWN_881D,   0x00000000],
-+        [A6XXRegs.REG_A6XX_RB_UNKNOWN_881E,   0x00000000],
-+        [A6XXRegs.REG_A7XX_RB_LRZ_CNTL2,      0x00000000],
-+        [A6XXRegs.REG_A8XX_RB_RESOLVE_CNTL_5, 0x00000001],
-+
-+        [A6XXRegs.REG_A7XX_SP_UNKNOWN_AB01,   0x00000000],
-+        [A6XXRegs.REG_A7XX_SP_HLSQ_MODE_CNTL, 0x00000000],
-+        [A6XXRegs.REG_A8XX_SP_UNKNOWN_AB23,   0x00000000],
-+
-+        [A6XXRegs.REG_A6XX_TPL1_PS_ROTATION_CNTL, 0x00000004],
-+        [A6XXRegs.REG_A6XX_TPL1_PS_SWIZZLE_CNTL, 0x00000000],
-+
-+        [A6XXRegs.REG_A8XX_PC_UNKNOWN_980B, 0x00800280],
-+        [A6XXRegs.REG_A8XX_PC_MODE_CNTL,    0x00003f00],
-+    ]
-+
-+a8xx_gen1 = GPUProps(
-+        reg_size_vec4 = 96,
-+        sysmem_vpc_attr_buf_size = 131072,
-+        sysmem_vpc_pos_buf_size = 65536,
-+        sysmem_vpc_bv_pos_buf_size = 32768,
-+        sysmem_ccu_color_cache_fraction = CCUColorCacheFraction.FULL.value,
-+        sysmem_per_ccu_color_cache_size = 128 * 1024,
-+        sysmem_ccu_depth_cache_fraction = CCUColorCacheFraction.FULL.value,
-+        sysmem_per_ccu_depth_cache_size = 256 * 1024,
-+        gmem_vpc_attr_buf_size = 49152,
-+        gmem_vpc_pos_buf_size = 24576,
-+        gmem_vpc_bv_pos_buf_size = 32768,
-+        gmem_ccu_color_cache_fraction = CCUColorCacheFraction.EIGHTH.value,
-+        gmem_per_ccu_color_cache_size = 16 * 1024,
-+        gmem_ccu_depth_cache_fraction = CCUColorCacheFraction.FULL.value,
-+        gmem_per_ccu_depth_cache_size = 256 * 1024,
-+
-+        has_salu_int_narrowing_quirk = True
-+)
-+
-+a8xx_gen2 = GPUProps(
-+        reg_size_vec4 = 128,
-+        sysmem_vpc_attr_buf_size = 131072,
-+        sysmem_vpc_pos_buf_size = 65536,
-+        sysmem_vpc_bv_pos_buf_size = 32768,
-+        sysmem_ccu_color_cache_fraction = CCUColorCacheFraction.FULL.value,
-+        sysmem_per_ccu_color_cache_size = 128 * 1024,
-+        sysmem_ccu_depth_cache_fraction = CCUColorCacheFraction.THREE_QUARTER.value,
-+        sysmem_per_ccu_depth_cache_size = 192 * 1024,
-+        gmem_vpc_attr_buf_size = 49152,
-+        gmem_vpc_pos_buf_size = 24576,
-+        gmem_vpc_bv_pos_buf_size = 32768,
-+        gmem_ccu_color_cache_fraction = CCUColorCacheFraction.EIGHTH.value,
-+        gmem_per_ccu_color_cache_size = 16 * 1024,
-+        gmem_ccu_depth_cache_fraction = CCUColorCacheFraction.FULL.value,
-+        gmem_per_ccu_depth_cache_size = 256 * 1024,
-+        has_fs_tex_prefetch = False,
-+
-+        has_salu_int_narrowing_quirk = True
-+)
-+
-+add_gpus([
-+       GPUId(chip_id=0xffff44010000, name="Adreno (TM) 810"),
-+    ], A6xxGPUInfo(
-+        CHIP.A8XX,
-+        [a7xx_base, a7xx_gen3, a8xx_base, a8xx_gen1, GPUProps(
-+            gmem_vpc_attr_buf_size = 16384,
-+            gmem_vpc_pos_buf_size = 12288,
-+            gmem_vpc_bv_pos_buf_size = 20480,
-+            # This is possibly also needed for a830 (and all of a8xx),
-+            # move to a8xx_base if confirmed needed for a830.
-+            has_fs_tex_prefetch = False,
-+        )],
-+        num_ccu = 1,
-+        num_slices = 1,
-+        tile_align_w = 32,
-+        tile_align_h = 16,
-+        tile_max_w = 16384,
-+        tile_max_h = 16384,
-+        num_vsc_pipes = 32,
-+        cs_shared_mem_size = 32 * 1024,
-+        wave_granularity = 2,
-+        fibers_per_sp = 128 * 2 * 16,
-+        magic_regs = dict(),
-+        raw_magic_regs = a8xx_base_raw_magic_regs,
-+    ))
-+
-+add_gpus([
-+        GPUId(chip_id=0xffff44050000, name="Adreno (TM) 830"),
-+        GPUId(chip_id=0x44050001, name="Adreno (TM) 830"), # KGSL
-+    ], A6xxGPUInfo(
-+        CHIP.A8XX,
-+        [a7xx_base, a7xx_gen3, a8xx_base, a8xx_gen1],
-+        num_ccu = 6,
-+        num_slices = 3,
-+        tile_align_w = 96,
-+        tile_align_h = 32,
-+        tile_max_w = 16416,
-+        tile_max_h = 16384,
-+        num_vsc_pipes = 32,
-+        cs_shared_mem_size = 32 * 1024,
-+        wave_granularity = 2,
-+        fibers_per_sp = 128 * 2 * 16,
-+        magic_regs = dict(),
-+        raw_magic_regs = a8xx_base_raw_magic_regs,
-+    ))
-+
-+add_gpus([
-+        GPUId(chip_id=0x44030a20, name="Adreno (TM) 829"), # KGSL
-+    ], A6xxGPUInfo(
-+        CHIP.A8XX,
-+        [a7xx_base, a7xx_gen3, a8xx_base, a8xx_gen2,
-+         GPUProps(
-+            shading_rate_matches_vk = True,  # TODO confirm this
-+            sysmem_vpc_bv_pos_buf_size = 24576,
-+         )],
-+        num_ccu = 4,
-+        num_slices = 2,
-+        tile_align_w = 64,
-+        tile_align_h = 32,
-+        tile_max_w = 16384,
-+        tile_max_h = 16384,
-+        num_vsc_pipes = 32,
-+        cs_shared_mem_size = 32 * 1024,
-+        wave_granularity = 2,
-+        fibers_per_sp = 128 * 2 * 16,
-+        magic_regs = dict(),
-+        raw_magic_regs = a8xx_base_raw_magic_regs,
-+    ))
-+
-+add_gpus([
-+        GPUId(chip_id=0xffff44050A31, name="Adreno (TM) 840"),
-+    ], A6xxGPUInfo(
-+        CHIP.A8XX,
-+        [a7xx_base, a7xx_gen3, a8xx_base, a8xx_gen2,
-+         GPUProps(shading_rate_matches_vk = True)],
-+        num_ccu = 6,
-+        num_slices = 3,
-+        tile_align_w = 96,
-+        tile_align_h = 32,
-+        tile_max_w = 16416,
-+        tile_max_h = 16384,
-+        num_vsc_pipes = 32,
-+        cs_shared_mem_size = 32 * 1024,
-+        wave_granularity = 2,
-+        fibers_per_sp = 128 * 2 * 16,
-+        magic_regs = dict(),
-+        raw_magic_regs = a8xx_base_raw_magic_regs,
-+    ))
-+
-+add_gpus([
-+        GPUId(chip_id=0xffff44070041, name="Adreno (TM) X2-85"),
-+    ], A6xxGPUInfo(
-+        CHIP.A8XX,
-+        [a7xx_base, a7xx_gen3, a8xx_base, a8xx_gen2],
-+        num_ccu = 8,
-+        num_slices = 4,
-+        tile_align_w = 64,
-+        tile_align_h = 64,
-+        tile_max_w = 16384,
-+        tile_max_h = 16384,
-+        num_vsc_pipes = 32,
-+        cs_shared_mem_size = 32 * 1024,
-+        wave_granularity = 2,
-+        fibers_per_sp = 128 * 2 * 16,
-+        magic_regs = dict(),
-+        raw_magic_regs = a8xx_base_raw_magic_regs,
-+    ))
-+
-+# END A8XX_SUPPORT
- 
---
+ add_gpus([
+         # These are named as Adreno730v3 or Adreno725v1.
+         GPUId(chip_id=0x07030002, name="FD725"),
+
+-- 
 2.45.0

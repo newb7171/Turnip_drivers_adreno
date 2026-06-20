@@ -131,9 +131,5 @@ EOF
 
 zip -9 "$workdir/turnip/Turnip-v$BUILD_VERSION.zip" vulkan.adreno.so meta.json
 
-# ignore this. this is for github actions
-
-echo "BUILD_VERSION=$BUILD_VERSION" >> $GITHUB_ENV
-
 echo "build complete."
 exit 0

@@ -454,10 +454,6 @@ Signed-off-by: Mesa Contributor <contributor@example.com>
 +    ))
 +
 +# END A8XX_SUPPORT
-+
- add_gpus([
-         # These are named as Adreno730v3 or Adreno725v1.
-         GPUId(chip_id=0x07030002, name="FD725"),
-
--- 
-2.45.0
+ 
+ -- 
+2.52.0

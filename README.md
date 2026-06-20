@@ -45,7 +45,7 @@ https://github.com/SnowNF/ndk-aarch64-linux
 
 
 
-Script (Modified): 
+Script (Modified) and KGSL patch: 
 https://github.com/whitebelyash
 
 
@@ -55,7 +55,8 @@ T̶e̶r̶m̶u̶x̶ ̶P̶r̶o̶o̶t̶-̶d̶i̶s̶t̶r̶o̶:̶ ̶ ̶ ̶h̶t̶t̶p�
 
 
 
-Gpu Patches And Hacks:  Vauzi
+Gpu 7xx Patches:
+https://github.com/Vauzi-17
 
 
 

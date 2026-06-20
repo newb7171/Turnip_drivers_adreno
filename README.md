@@ -3,10 +3,6 @@ Turnip drivers compiled from source for Android Emulators
 
 
 
-C̶o̶m̶p̶i̶l̶e̶d̶ ̶o̶n̶ ̶T̶e̶r̶m̶u̶x̶ ̶P̶r̶o̶o̶t̶-̶d̶i̶s̶t̶r̶o̶ ̶
-
-
-
 Compiled by Github actions.
 
 
@@ -47,11 +43,6 @@ https://github.com/SnowNF/ndk-aarch64-linux
 
 Script (Modified) and KGSL patch And 8xx support:
 https://github.com/whitebelyash
-
-
-
-T̶e̶r̶m̶u̶x̶ ̶P̶r̶o̶o̶t̶-̶d̶i̶s̶t̶r̶o̶:̶ ̶ ̶ ̶h̶t̶t̶p̶s̶:̶/̶/̶g̶i̶t̶h̶u̶b̶.̶c̶o̶m̶/̶t̶e̶r̶m̶u̶x̶/̶p̶r̶o̶o̶t̶-̶d̶i̶s̶t̶r̶o̶
-
 
 
 

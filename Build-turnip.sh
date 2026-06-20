@@ -6,8 +6,8 @@ workdir="$(pwd)/turnip_workdir"
 ndk="$workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/bin"
 mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 BUILD_VERSION="26.2.0_V4"
-PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/patch.patch"
-PATCH_2="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/whitebelyash-patch-experimental.diff"
+PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/Gpu-Hacks.patch"
+PATCH_2="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/KGSL-hacks-whitebelyash.diff"
 
 
 echo "Only works in debian!!! press Ctrl + C to exit"
@@ -39,10 +39,10 @@ cd mesa
 echo "Applying patch..."
 wget "$PATCH_1"
 wget "$PATCH_2"
-git apply patch.patch
+git apply Gpu-Hacks.patch
 patch -p1 whitebelyash-patch-experimental.diff
 git add -A
-rm -f patch.patch && rm -f whitebelyash-patch-experimental.diff
+rm -f patch.patch && rm -f KGSL-hacks-whitebelyash.diff
 
 echo "#define TUGEN8_DRV_VERSION \"$BUILD_VERSION\"" > ./src/freedreno/vulkan/tu_version.h
 

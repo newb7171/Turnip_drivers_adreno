@@ -50,7 +50,7 @@ mv freedreno_devices.py src/freedreno/common
 wget "$PATCH_1"
 wget "$PATCH_2"
 git apply Gpu-Hacks.patch
-patch -p1 KGSL-hacks-whitebelyash.diff
+patch -p1 > KGSL-hacks-whitebelyash.diff
 git add -A
 
 echo "#define TUGEN8_DRV_VERSION \"$BUILD_VERSION\"" > ./src/freedreno/vulkan/tu_version.h

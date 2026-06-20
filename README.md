@@ -45,7 +45,7 @@ https://github.com/SnowNF/ndk-aarch64-linux
 
 
 
-Script (Modified) and KGSL patch: 
+Script (Modified) and KGSL patch And 8xx support:
 https://github.com/whitebelyash
 
 
@@ -68,7 +68,14 @@ https://github.com/Vauzi-17
 
 710 / 720 / 722 / 725 / 720G / 730 / 740 / 750 / 752 / 760 / 780
 
-(8xx not supported)
+
+
+
+# 8XX
+
+810 / 820 / 829 / 830 / 840
+
+(8XX now supported yayaya!!)
 
 
 

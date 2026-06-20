@@ -37,8 +37,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: Turnip-v${{ env.BUILD_VERSION }}
-          name: Turnip-v${{ env.BUILD_VERSION }}
+          tag_name: Turnip-v${{ env.BUILD_VERSION }}-deb
+          name: Turnip-v${{ env.BUILD_VERSION }}-deb
           files: turnip_workdir/turnip/*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

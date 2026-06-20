@@ -20,6 +20,8 @@ apt-get build-dep libarchive -y -qq
 
 apt-get install -y pkg-config git cmake wget zip patchelf libclc-21-dev -qq
 
+echo "setting up workdir"
+
 mkdir -p "$workdir"
 cd "$workdir"
 
@@ -29,11 +31,15 @@ rm -rf "$workdir/r29"
 rm -rf "$workdir/mesa"
 rm -f "$workdir/android-ndk-r29-linux-aarch64.tar.gz"
 
+echo "installing NDK and Cloning Mesa's latest source"
+
 wget -q -nv https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz
 tar -xzf android-ndk-r29-linux-aarch64.tar.gz
 
 git clone $mesasrc --depth=1
 cd mesa
+
+echo "applying patches..."
 
 wget https://raw.githubusercontent.com/whitebelyash/mesa-unified/main/src/freedreno/common/freedreno_devices.py
 
@@ -41,7 +47,6 @@ rm -f src/freedreno/common/freedreno_devices.py
 
 mv freedreno_devices.py src/freedreno/common
 
-echo "Applying patch..."
 wget "$PATCH_1"
 wget "$PATCH_2"
 git apply Gpu-Hacks.patch
@@ -59,6 +64,8 @@ export STRIP=llvm-strip
 export OBJDUMP=llvm-objdump
 export OBJCOPY=llvm-objcopy
 export LDFLAGS="-fuse-ld=lld"
+
+echo "setting crossfiles and setting up mesa..."
 
 cat <<EOF > android-aarch64.txt
 [binaries]
@@ -113,9 +120,13 @@ meson setup build-android-aarch64 \
     -Degl=disabled \
     -Dandroid-strict=false
 
+echo "compiling mesa..."
+
 ninja -C build-android-aarch64 install
 
 cd "$workdir/turnip/lib"
+
+echo "packaging turnip"
 
 patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
 mv libvulkan_freedreno.so vulkan.adreno.so
@@ -127,7 +138,7 @@ cat <<EOF > meta.json
   "description": "Built from source",
   "author": "JustCallMeJade",
   "packageVersion": "1",
-  "vendor": "Mesa3d",
+  "vendor": "Mesa3D",
   "driverVersion": "Vulkan 1.4.335",
   "minApi": 28,
   "libraryName": "vulkan.adreno.so"

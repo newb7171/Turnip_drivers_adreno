@@ -132,7 +132,7 @@ patchelf --set-soname vulkan.adreno.so libvulkan_freedreno.so
 mv libvulkan_freedreno.so vulkan.adreno.so
 
 # Set up deb staging directory
-PREFIX="/data/data/com.termux/files"
+PREFIX="data/data/com.termux/files"
 PKGDIR="$workdir/deb_staging"
 LIBDIR="$PKGDIR/$PREFIX/usr/lib"
 ICDDIR="$PKGDIR/$PREFIX/usr/share/vulkan/icd.d"
@@ -148,7 +148,7 @@ cat <<EOF > "$ICDDIR/freedreno_icd.aarch64.json"
 {
     "file_format_version": "1.0.0",
     "ICD": {
-        "library_path": "$PREFIX/usr/lib/vulkan.adreno.so",
+        "library_path": "/$PREFIX/usr/lib/vulkan.adreno.so",
         "api_version": "1.4.335"
     }
 }

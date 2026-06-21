@@ -49,7 +49,6 @@ wget "$PATCH_3"
 git config user.name "Your Name"
 git config user.email "your.email@example.com"
 
-patch -p1 -i KGSL-hacks-whitebelyash.diff
 git am -3 --continue tu8_kgsl_26.patch
 git add -A
 

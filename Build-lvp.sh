@@ -26,7 +26,7 @@ echo "setting up workdir"
 mkdir -p "$workdir"
 cd "$workdir"
 
-mkdir -p "$workdir/turnip"
+mkdir -p "$workdir/lvp"
 
 rm -rf "$workdir/r29"
 rm -rf "$workdir/mesa"

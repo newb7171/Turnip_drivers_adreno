@@ -83,7 +83,7 @@ strip = '$ndk/llvm-strip'
 pkg-config = ['env', 'PKG_CONFIG_LIBDIR=$sysroot/usr/lib/pkg-config', 'PKG_CONFIG_SYSROOT_DIR=$sysroot', '/usr/bin/pkg-config']
 
 [built-in options]
-c_args = ['--sysroot=$sysroot']
+c_args = ['--sysroot=$sysroot', '-Wno-error']
 cpp_args = ['--sysroot=$sysroot']
 c_link_args = ['--sysroot=$sysroot']
 cpp_link_args = ['--sysroot=$sysroot']

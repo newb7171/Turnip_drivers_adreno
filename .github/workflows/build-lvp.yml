@@ -17,7 +17,7 @@ jobs:
       - name: Run build script
         run: |
           chmod +x Build-lvp.sh
-          ./Build-lvp.sh
+          echo "$PATH"
 
       - name: Debug zip output
         run: |

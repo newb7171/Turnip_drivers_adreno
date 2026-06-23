@@ -53,20 +53,14 @@ echo "setting crossfiles and setting up mesa..."
 
 cat <<EOF > android-aarch64.txt
 [binaries]
-ar = '$ndk/llvm-ar'
+ar = 'llvm-ar'
 c = ['$ndk/aarch64-linux-android35-clang', '--sysroot=$sysroot', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments', '-Wno-error']
 cpp = ['$ndk/aarch64-linux-android35-clang++', '--sysroot=$sysroot', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments', '-Wno-error']
-c_ld = '$ndk/ld.lld'
-cpp_ld = '$ndk/ld.lld'
-strip = '$ndk/llvm-strip'
+c_ld = 'ld.lld'
+cpp_ld = 'ld.lld'
+strip = 'llvm-strip'
 llvm-config = 'llvm-config'
 pkg-config = 'pkg-config'
-
-[built-in options]
-c_args = ['--sysroot=$sysroot']
-cpp_args = ['--sysroot=$sysroot']
-c_link_args = ['--sysroot=$sysroot']
-cpp_link_args = ['--sysroot=$sysroot']
 
 [properties]
 ndk = '$workdir/r29'

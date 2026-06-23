@@ -9,7 +9,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-26.04-arm
-    
+
+    container:
+      image: debian:sid
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

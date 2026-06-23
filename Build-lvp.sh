@@ -6,14 +6,14 @@ workdir="$(pwd)/lvp_workdir"
 ndk="$workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/bin"
 sysroot="$workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
 mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
-BUILD_VERSION="26.2.0-V4.1"
+BUILD_VERSION="26.2.0-V5.0"
 PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/Gpu-Hacks.patch"
 PATCH_2="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/KGSL-hacks-whitebelyash.diff"
 
 echo "Only works in debian Arm64!!! press Ctrl + C to exit"
 echo "Installing build dependencies..."
 
-sed -i '/^Types:/ s/deb$/deb deb-src/' /etc/apt/sources.list.d/debian.sources
+sed -i '/^Types:/ s/deb$/deb deb-src/' /etc/apt/sources.list.d/ubuntu.sources
 
 apt-get update
 apt-get build-dep mesa -y -qq > /dev/null 2>&1

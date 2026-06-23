@@ -60,7 +60,7 @@ cpp = ['$ndk/aarch64-linux-android35-clang++', '--sysroot=$sysroot', '-fno-excep
 c_ld = '$ndk/ld.lld'
 cpp_ld = '$ndk/ld.lld'
 strip = '$ndk/llvm-strip'
-pkg-config = ['env', 'PKG_CONFIG_LIBDIR=$ndk/pkg-config', '/usr/bin/pkg-config']
+pkg-config = ['env', 'PKG_CONFIG_LIBDIR=$ndk/pkg-config', 'pkg-config']
 
 [built-in options]
 c_args = ['--sysroot=$sysroot']
@@ -77,13 +77,13 @@ EOF
 
 cat <<EOF > native.txt
 [binaries]
-c = '/usr/bin/clang'
-cpp = '/usr/bin/clang++'
-ar = '/usr/bin/llvm-ar'
-strip = '/usr/bin/llvm-strip'
+c = 'clang'
+cpp = 'clang++'
+ar = 'llvm-ar'
+strip = 'llvm-strip'
 c_ld = 'ld.lld'
 cpp_ld = 'ld.lld'
-pkg-config = '/usr/bin/pkg-config'
+pkg-config = 'pkg-config'
 
 [build_machine]
 system = 'linux'
@@ -108,7 +108,8 @@ meson setup build-android-aarch64 \
     -Dvulkan-drivers=swrast \
     -Dvulkan-beta=true \
     -Degl=disabled \
-    -Dandroid-strict=false
+    -Dandroid-strict=false \
+    -Dallow-fallback-for=libdrm
 
 echo "compiling mesa..."
 

@@ -11,10 +11,9 @@ PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/G
 PATCH_2="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/KGSL-hacks-whitebelyash.diff"
 PATCH_3="https://github.com/lfdevs/mesa-for-android-container/commit/0a60c9c4108200fda20016b594dcf8806f29a28e.diff"
 PATCH_4="https://github.com/lfdevs/mesa-for-android-container/commit/4bae24252a344c47a2afcd0fbd238d83bbc29f46.diff"
-PATCH_5="https://raw.githubusercontent.com/JustCallMeJade/Turnip_drivers_adreno/main/tu8_kgsl_26.diff"
+PATCH_5="https://raw.githubusercontent.com/JustCallMeJade/Turnip_drivers_adreno/main/tu8_kgsl_26.diff
 
-echo "Only works in debian Arm64!!! press Ctrl + C to exit"
-echo "Installing build dependencies..."
+echo "installing deps..."
 
 sed -i '/^Types:/ s/deb$/deb deb-src/' /etc/apt/sources.list.d/debian.sources
 
@@ -131,7 +130,7 @@ meson setup build-android-aarch64 \
     -Dfreedreno-kmds=kgsl \
     -Degl=disabled \
     -Dandroid-strict=false \
-    -Dshader-cache=true
+    -Dshader-cache=enabled
 
 echo "compiling mesa..."
 
@@ -148,7 +147,7 @@ cat <<EOF > meta.json
 {
   "schemaVersion": 1,
   "name": "Mesa Turnip v$BUILD_VERSION",
-  "description": "Built from source",
+  "description": "Built from source + GPU hacks creds to Vauzi and Whitebelyash",
   "author": "JustCallMeJade",
   "packageVersion": "1",
   "vendor": "Mesa3D",

@@ -40,7 +40,6 @@ tar -xzf android-ndk-r29-linux-aarch64.tar.gz
 git clone $mesasrc --depth=1
 cd mesa
 
-export PATH="$workdir/bin:$ndk:$PATH"
 export CC=clang
 export CXX=clang++
 export AR=llvm-ar
@@ -67,6 +66,9 @@ c_args = ['--sysroot=$sysroot']
 cpp_args = ['--sysroot=$sysroot']
 c_link_args = ['--sysroot=$sysroot']
 cpp_link_args = ['--sysroot=$sysroot']
+
+[properties]
+ndk = '$workdir/r29'
 
 [host_machine]
 system = 'android'

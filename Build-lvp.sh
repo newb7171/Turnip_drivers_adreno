@@ -60,7 +60,7 @@ c_ld = '$ndk/ld.lld'
 cpp_ld = '$ndk/ld.lld'
 strip = '$ndk/llvm-strip'
 llvm-config = 'llvm-config'
-pkg-config = ['env', 'PKG_CONFIG_LIBDIR=$ndk/pkg-config', 'pkg-config']
+pkg-config = 'pkg-config'
 
 [built-in options]
 c_args = ['--sysroot=$sysroot']

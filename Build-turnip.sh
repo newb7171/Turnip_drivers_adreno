@@ -44,12 +44,6 @@ cd mesa
 
 echo "applying patches..."
 
-wget https://raw.githubusercontent.com/whitebelyash/mesa-unified/main/src/freedreno/common/freedreno_devices.py
-
-rm -f src/freedreno/common/freedreno_devices.py
-
-mv freedreno_devices.py src/freedreno/common
-
 wget "$PATCH_1"
 wget "$PATCH_2"
 wget "$PATCH_3"

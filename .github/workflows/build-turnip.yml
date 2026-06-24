@@ -11,8 +11,10 @@ jobs:
       options: --user root
     env:
       USERNAME: Turnip-adrenotools
-
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
       - name: Update apt and install dependencies
         run: apt update && apt install -y python3 python3-pip git
 
@@ -24,20 +26,23 @@ jobs:
           cd
           build-now
 
-      - name: Find zip in turnip_workdir
-        id: find_zip
+      - name: Debug zip output
         run: |
-          ZIP_PATH=$(find turnip_workdir/turnip -name "*.zip" | head -n 1)
-          if [ -z "$ZIP_PATH" ]; then
-            echo "No zip file found in turnip_workdir!"
-            exit 1
-          fi
-          echo "zip_path=$ZIP_PATH" >> $GITHUB_OUTPUT
-          echo "Found: $ZIP_PATH"
+          find turnip_workdir -type f -name "*.zip" -print
 
-      - name: Upload zip artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: turnip-build
-          path: ${{ steps.find_zip.outputs.zip_path }}
+          path: turnip_workdir/turnip/*.zip
           if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.BUILD_VERSION }}
+          name: v${{ env.BUILD_VERSION }}
+          files: turnip_workdir/turnip/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

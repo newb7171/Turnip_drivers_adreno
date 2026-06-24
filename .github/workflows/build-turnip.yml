@@ -1,5 +1,3 @@
-name: Turnip-adrenotools
-
 on:
   push:
     branches: ["main"]
@@ -8,16 +6,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-26.04-arm
+    container:
+      image: debian:sid
+      options: --user root
+    env:
+      USERNAME: Turnip-adrenotools
 
     steps:
       - name: Update apt and install dependencies
-        run: sudo apt update && sudo apt install -y python3 git
+        run: apt update && apt install -y python3 python3-pip git
 
       - name: Clone, install, and build
         run: |
           git clone https://github.com/JustCallMeJade/Random-py-project
           cd Random-py-project
-          pip install .
+          pip install . --break-system-packages
           build-now
 
       - name: Find zip in turnip_workdir

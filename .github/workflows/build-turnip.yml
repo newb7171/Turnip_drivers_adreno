@@ -27,7 +27,7 @@ jobs:
       - name: Find zip in turnip_workdir
         id: find_zip
         run: |
-          ZIP_PATH=$(find turnip_workdir -name "*.zip" | head -n 1)
+          ZIP_PATH=$(find turnip_workdir/turnip -name "*.zip" | head -n 1)
           if [ -z "$ZIP_PATH" ]; then
             echo "No zip file found in turnip_workdir!"
             exit 1

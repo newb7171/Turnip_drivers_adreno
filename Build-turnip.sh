@@ -95,13 +95,13 @@ EOF
 
 cat <<EOF > native.txt
 [binaries]
-c = '/usr/bin/clang'
-cpp = '/usr/bin/clang++'
-ar = '/usr/bin/llvm-ar'
-strip = '/usr/bin/llvm-strip'
+c = 'clang'
+cpp = 'clang++'
+ar = 'llvm-ar'
+strip = 'llvm-strip'
 c_ld = 'ld.lld'
 cpp_ld = 'ld.lld'
-pkg-config = '/usr/bin/pkg-config'
+pkg-config = 'pkg-config'
 
 [build_machine]
 system = 'linux'
@@ -157,7 +157,9 @@ EOF
 
 zip -9 "$workdir/turnip/Turnip-v$BUILD_VERSION.zip" vulkan.adreno.so meta.json
 
-echo "BUILD_VERSION=$BUILD_VERSION" >> $GITHUB_ENV
+if [ "$GITHUB_ACTIONS" = "true" ]; then
+    echo "BUILD_VERSION=$BUILD_VERSION" >> "$GITHUB_ENV"
+fi
 
 echo "build complete."
 exit 0

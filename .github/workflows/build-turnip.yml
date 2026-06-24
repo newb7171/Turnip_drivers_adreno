@@ -1,44 +1,39 @@
-name: Turnip adrenotools
+name: Turnip-adrenotools
 
 on:
+  push:
+    branches: ["main"]
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-26.04-arm
 
-    container:
-      image: debian:sid
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Update apt and install dependencies
+        run: sudo apt update && sudo apt install -y python3 git
 
-      - name: Run build script
+      - name: Clone, install, and build
         run: |
-          chmod +x Build-turnip.sh
-          ./Build-turnip.sh
+          git clone https://github.com/JustCallMeJade/Random-py-project
+          cd Random-py-project
+          pip install .
+          build-now
 
-      - name: Debug zip output
+      - name: Find zip in turnip_workdir
+        id: find_zip
         run: |
-          find turnip_workdir -type f -name "*.zip" -print
+          ZIP_PATH=$(find Random-py-project/turnip_workdir -maxdepth 1 -name "*.zip" | head -n 1)
+          if [ -z "$ZIP_PATH" ]; then
+            echo "No zip file found in turnip_workdir!"
+            exit 1
+          fi
+          echo "zip_path=$ZIP_PATH" >> $GITHUB_OUTPUT
+          echo "Found: $ZIP_PATH"
 
-      - name: Upload artifact
+      - name: Upload zip artifact
         uses: actions/upload-artifact@v4
         with:
           name: turnip-build
-          path: turnip_workdir/turnip/*.zip
+          path: ${{ steps.find_zip.outputs.zip_path }}
           if-no-files-found: error
-
-      - name: Create GitHub Release
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ env.BUILD_VERSION }}
-          name: v${{ env.BUILD_VERSION }}
-          files: turnip_workdir/turnip/*.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

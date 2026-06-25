@@ -3,28 +3,24 @@ name: Turnip adrenotools
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-26.04-arm
+
     container:
       image: debian:sid
-      options: --user root
-    env:
-      USERNAME: Turnip-adrenotools
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        
-      - name: Update apt and install dependencies
-        run: apt update && apt install -y python3 python3-pip git
 
-      - name: Clone, install, and build
+      - name: Run build script
         run: |
-          git clone https://github.com/JustCallMeJade/Random-py-project
-          cd Random-py-project
-          pip install . --break-system-packages
-          cd
-          build-now
+          chmod +x Build-turnip.sh
+          ./Build-turnip.sh
 
       - name: Debug zip output
         run: |

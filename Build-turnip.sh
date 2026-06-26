@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 set -euo pipefail
 
@@ -23,8 +23,6 @@ apt-get build-dep libarchive -y -qq > /dev/null 2>&1
 
 apt-get install -y pkg-config git cmake wget zip patchelf libclc-21-dev -qq > /dev/null 2>&1
 
-echo "setting up workdir"
-
 mkdir -p "$workdir"
 cd "$workdir"
 
@@ -34,15 +32,11 @@ rm -rf "$workdir/r29"
 rm -rf "$workdir/mesa"
 rm -f "$workdir/android-ndk-r29-linux-aarch64.tar.gz"
 
-echo "installing NDK and Cloning Mesa's latest source"
-
 wget -q -nv https://github.com/SnowNF/ndk-aarch64-linux/releases/download/0.0.2/android-ndk-r29-linux-aarch64.tar.gz
 tar -xzf android-ndk-r29-linux-aarch64.tar.gz
 
 git clone $mesasrc --depth=1
 cd mesa
-
-echo "applying patches..."
 
 wget "$PATCH_1"
 wget "$PATCH_2"
@@ -66,8 +60,6 @@ export STRIP=llvm-strip
 export OBJDUMP=llvm-objdump
 export OBJCOPY=llvm-objcopy
 export LDFLAGS="-fuse-ld=lld"
-
-echo "setting crossfiles and setting up mesa..."
 
 cat <<EOF > android-aarch64.txt
 [binaries]
@@ -128,8 +120,6 @@ meson setup build-android-aarch64 \
     -Degl=disabled \
     -Dandroid-strict=false \
     -Dshader-cache=true
-
-echo "compiling mesa..."
 
 ninja -C build-android-aarch64 install
 

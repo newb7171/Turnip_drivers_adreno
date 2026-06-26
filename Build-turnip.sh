@@ -58,7 +58,6 @@ git add -A
 
 echo "#define TUGEN8_DRV_VERSION \"$BUILD_VERSION\"" > ./src/freedreno/vulkan/tu_version.h
 
-export PATH="$workdir/bin:$ndk:$PATH"
 export CC=clang
 export CXX=clang++
 export AR=llvm-ar

@@ -11,15 +11,17 @@ PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/G
 PATCH_2="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/KGSL-hacks-whitebelyash.diff"
 PATCH_3="https://github.com/lfdevs/mesa-for-android-container/commit/0a60c9c4108200fda20016b594dcf8806f29a28e.diff"
 PATCH_4="https://github.com/lfdevs/mesa-for-android-container/commit/4bae24252a344c47a2afcd0fbd238d83bbc29f46.diff"
+PATCH_5="https://raw.githubusercontent.com/JustCallMeJade/Turnip_drivers_adreno/main/experimental.diff"
 
 echo "Only works in debian Arm64!!! press Ctrl + C to exit"
 echo "Installing build dependencies..."
 
     sed -i '/^Types:/ s/$/ deb-src/' /etc/apt/sources.list.d/debian.sources
-
+    
 apt-get update
 apt-get build-dep mesa -y -qq > /dev/null 2>&1
 apt-get build-dep libarchive -y -qq > /dev/null 2>&1
+
 
 apt-get install -y pkg-config git cmake wget zip patchelf libclc-21-dev -qq > /dev/null 2>&1
 
@@ -42,11 +44,12 @@ wget "$PATCH_1"
 wget "$PATCH_2"
 wget "$PATCH_3"
 wget "$PATCH_4"
-
+wget "$PATCH_5"
 git apply Gpu-Hacks.patch
 patch -p1 -i 0a60c9c4108200fda20016b594dcf8806f29a28e.diff
 patch -p1 -i KGSL-hacks-whitebelyash.diff
 patch -p1 -i 4bae24252a344c47a2afcd0fbd238d83bbc29f46.diff
+patch -p1 -i experimental.diff
 
 git add -A
 

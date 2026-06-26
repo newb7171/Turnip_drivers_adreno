@@ -44,12 +44,10 @@ wget "$PATCH_1"
 wget "$PATCH_2"
 wget "$PATCH_3"
 wget "$PATCH_4"
-wget "$PATCH_5"
 git apply Gpu-Hacks.patch
 patch -p1 -i 0a60c9c4108200fda20016b594dcf8806f29a28e.diff
 patch -p1 -i KGSL-hacks-whitebelyash.diff
 patch -p1 -i 4bae24252a344c47a2afcd0fbd238d83bbc29f46.diff
-patch -p1 -i experimental.diff
 
 git add -A
 

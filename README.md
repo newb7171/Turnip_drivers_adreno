@@ -32,21 +32,21 @@ Updates every Day or whenever
 
 
 
-Mesa source:   https://gitlab.freedesktop.org/mesa/mesa
+**Mesa source:**   https://gitlab.freedesktop.org/mesa/mesa
 
 
 
-Android NDK:
+**Android NDK:**
 https://github.com/SnowNF/ndk-aarch64-linux
 
 
 
-Script (Modified) and KGSL patch And 8xx support:
+**Script (Modified) and KGSL patch And 8xx support:**
 https://github.com/whitebelyash
 
 
 
-Gpu 7xx Patches:
+**Gpu 7xx Patches:**
 https://github.com/Vauzi-17
 
 
@@ -54,21 +54,19 @@ https://github.com/Vauzi-17
 ## Supported GPUs (6xx supported any)
 
 
-# 7XX:
+##### 7XX:
 
 
-710 / 720 / 722 / 725 / 720G / 730 / 740 / 750 / 752 / 760 / 780
+**710 / 720 / 722 / 725 / 720G / 730 / 740 / 750 / 752 / 760 / 780**
 
 
 
 
-# 8XX
+##### 8XX
 
-810 / 829 / 830 / 840
+**810 / 829 / 830 / 840**
 
 (8XX now supported yayaya!!)
-
-###### .
 
 
 

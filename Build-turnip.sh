@@ -15,9 +15,6 @@ PATCH_4="https://github.com/lfdevs/mesa-for-android-container/commit/4bae24252a3
 echo "Only works in debian Arm64!!! press Ctrl + C to exit"
 echo "Installing build dependencies..."
 
-if [ -f /etc/apt/sources.list.d/debian.sources ]; then
-    # .sources format
-    if ! grep -q '^Types:.*deb-src' /etc/apt/sources.list.d/debian.sources; then
     sed -i '/^Types:/ s/$/ deb-src/' /etc/apt/sources.list.d/debian.sources
 
 apt-get update

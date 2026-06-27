@@ -10,6 +10,7 @@ PATCH_2="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/K
 PATCH_3="https://github.com/lfdevs/mesa-for-android-container/commit/0a60c9c4108200fda20016b594dcf8806f29a28e.diff"
 PATCH_5="https://github.com/lfdevs/mesa-for-android-container/commit/216d25275a57bc543944eb369a4e31ce3733a9a1.diff"
 PATCH_4="https://github.com/lfdevs/mesa-for-android-container/commit/4bae24252a344c47a2afcd0fbd238d83bbc29f46.diff"
+PATCH_6="https://github.com/lfdevs/mesa-for-android-container/commit/b23ef04b8e95e04ae4c77bb8c0bdcdcc97f813d7.diff"
 echo "Only works in debian Arm64!!! press Ctrl + C to exit"
 echo "Installing build dependencies..."
 
@@ -40,11 +41,14 @@ wget "$PATCH_1"
 wget "$PATCH_2"
 wget "$PATCH_3"
 wget "$PATCH_4"
+wget "$PATCH_5"
+wget "$PATCH_6"
 git apply Gpu-Hacks.patch
 patch -p1 -i 0a60c9c4108200fda20016b594dcf8806f29a28e.diff
 patch -p1 -i KGSL-hacks-whitebelyash.diff
 patch -p1 -i 4bae24252a344c47a2afcd0fbd238d83bbc29f46.diff
-
+patch -p1 -i 216d25275a57bc543944eb369a4e31ce3733a9a1.diff
+patch -p1 -i b23ef04b8e95e04ae4c77bb8c0bdcdcc97f813d7.diff
 git add -A
 
 echo "#define TUGEN8_DRV_VERSION \"$BUILD_VERSION\"" > ./src/freedreno/vulkan/tu_version.h

@@ -1,7 +1,5 @@
 #!/bin/bash -x
 
-set -euo pipefail
-
 workdir="$(pwd)/turnip_workdir"
 ndk="$workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/bin" #yes r29 is the directory
 sysroot="$workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
@@ -137,7 +135,7 @@ cat <<EOF > meta.json
   "author": "JustCallMeJade",
   "packageVersion": "1",
   "vendor": "Mesa3D",
-  "driverVersion": "Vulkan 1.4.334",
+  "driverVersion": "Vulkan 1.4.354",
   "minApi": 28,
   "libraryName": "vulkan.adreno.so"
 }

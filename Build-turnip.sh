@@ -5,6 +5,7 @@ ndk="$workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/bin" #yes r29 is the dir
 sysroot="$workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
 mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
 BUILD_VERSION="26.2.0-V5.0" # this script is always maintained just update when new version.
+VERSION="V5.0"
 PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/Gpu-Hacks.patch"
 PATCH_2="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/KGSL-hacks-whitebelyash.diff"
 PATCH_3="https://github.com/lfdevs/mesa-for-android-container/commit/0a60c9c4108200fda20016b594dcf8806f29a28e.diff"
@@ -36,6 +37,12 @@ tar -xzf android-ndk-r29-linux-aarch64.tar.gz
 
 git clone $mesasrc --depth=1
 cd mesa
+
+rm -f VERSION
+
+cat <<EOF > VERSION
+26.2.0-VERSION
+EOF
 
 wget "$PATCH_1"
 wget "$PATCH_2"

@@ -55,6 +55,9 @@ do
     wget "$patch"
 done
 
+wget https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/42489.diff
+wget https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/35924.diff
+
 git apply Gpu-Hacks.patch
 patch -p1 -i 0a60c9c4108200fda20016b594dcf8806f29a28e.diff
 patch -p1 -i KGSL-hacks-whitebelyash.diff

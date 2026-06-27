@@ -41,7 +41,7 @@ cd mesa
 rm -f VERSION
 
 cat <<EOF > VERSION
-26.2.0-VERSION
+26.2.0-$VERSION
 EOF
 
 wget "$PATCH_1"

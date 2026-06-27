@@ -132,7 +132,7 @@ meson setup build-android-aarch64 \
     -Dstrip=true \
     -Dplatforms=android \
     -Dvideo-codecs=all \
-    -Dplatform-sdk-version=35 \
+    -Dplatform-sdk-version=36 \
     -Dandroid-stub=true \
     -Dgallium-drivers= \
     -Dvulkan-drivers=freedreno \

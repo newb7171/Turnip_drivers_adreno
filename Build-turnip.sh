@@ -12,12 +12,11 @@ PATCH_4="https://github.com/lfdevs/mesa-for-android-container/commit/4bae24252a3
 echo "Only works in debian Arm64!!! press Ctrl + C to exit"
 echo "Installing build dependencies..."
 
-    sed -i '/^Types:/ s/$/ deb-src/' /etc/apt/sources.list.d/debian.sources
+sed -i '/^Types:/ s/$/ deb-src/' /etc/apt/sources.list.d/debian.sources
     
 apt-get update
 apt-get build-dep mesa -y -qq > /dev/null 2>&1
 apt-get build-dep libarchive -y -qq > /dev/null 2>&1
-
 
 apt-get install -y pkg-config git cmake wget zip patchelf libclc-21-dev -qq > /dev/null 2>&1
 
@@ -131,7 +130,7 @@ cat <<EOF > meta.json
 {
   "schemaVersion": 1,
   "name": "Mesa Turnip v$BUILD_VERSION",
-  "description": "Built from source",
+  "description": "Built from Mesa source + GPU hacks",
   "author": "JustCallMeJade",
   "packageVersion": "1",
   "vendor": "Mesa3D",

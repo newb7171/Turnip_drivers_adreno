@@ -1,0 +1,80 @@
+diff --git a/src/freedreno/decode/replay.c b/src/freedreno/decode/replay.c
+index 44443eaeedd3a3c1da9419fe9fd2010a4b151f0a..0856e65b2916572db7faf9ebfe691f01fa4fd25c 100644
+--- a/src/freedreno/decode/replay.c
++++ b/src/freedreno/decode/replay.c
+@@ -837,9 +837,52 @@ device_submit_cmdstreams(struct device *dev)
+    device_free_buffers(dev);
+ }
+ 
++static bool
++buffer_in_range(uint64_t iova, uint64_t size, uint64_t range_begin, uint64_t range_end)
++{
++   return range_begin <= iova && (iova + size) <= range_end;
++}
++
++static bool
++buffer_in_kgsl_svm_range(uint64_t iova, uint64_t size)
++{
++   return buffer_in_range(iova, size, 0x1000000000, 0x4000000000);
++}
++
++static bool
++buffer_in_kgsl_va_range(uint64_t iova, uint64_t size)
++{
++   return buffer_in_range(iova, size, 0x4000000000, 0x8000000000);
++}
++
+ static void
+ buffer_mem_alloc(struct device *dev, struct buffer *buf)
+ {
++   if (buffer_in_kgsl_svm_range(buf->iova, buf->size)) {
++      /* These are replayable buffers, allocated in the SVM range.
++       * We don't need a separate util_vma_heap to track these
++       * allocations, we can lean on the kernel to do that for us.
++       */
++
++      struct kgsl_gpumem_alloc_id req = {
++         .size = buf->size,
++         .flags = KGSL_MEMFLAGS_USE_CPU_MAP,
++      };
++
++      int ret = safe_ioctl(dev->fd, IOCTL_KGSL_GPUMEM_ALLOC_ID, &req);
++      if (ret) {
++         err(1, "IOCTL_KGSL_GPUMEM_ALLOC_ID failure %d", ret);
++      }
++
++      buf->gem_handle = req.id;
++      buf->map = mmap((void *)buf->iova, buf->size, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fd, req.id << 12);
++      if ((uint64_t)buf->map != buf->iova) {
++         err(1, "buffer with KGSL_MEMFLAGS_USE_CPU_MAP incorrectly mapped");
++      }
++      return;
++   }
++
++   assert(buffer_in_kgsl_va_range(buf->iova, buf->size));
+    bool success = util_vma_heap_alloc_addr(&dev->vma, buf->iova, buf->size);
+    if (!success)
+       errx(1, "Failed to allocate buffer");
+@@ -850,7 +893,21 @@ buffer_mem_alloc(struct device *dev, struct buffer *buf)
+ void
+ buffer_mem_free(struct device *dev, struct buffer *buf)
+ {
+-   util_vma_heap_free(&dev->vma, buf->iova, buf->size);
++   if (buf->gem_handle) {
++      assert(buffer_in_kgsl_svm_range(buf->iova, buf->size));
++
++      struct kgsl_gpumem_free_id req = {
++         .id = buf->gem_handle,
++      };
++
++      int ret = safe_ioctl(dev->fd, IOCTL_KGSL_GPUMEM_FREE_ID, &req);
++      if (ret) {
++         err(1, "IOCTL_KGSL_GPUMEM_FREE_ID failure %d", ret);
++      }
++   } else {
++      assert(buffer_in_kgsl_va_range(buf->iova, buf->size));
++      util_vma_heap_free(&dev->vma, buf->iova, buf->size);
++   }
+ }
+ #else
+ 

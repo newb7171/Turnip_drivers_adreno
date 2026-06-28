@@ -56,14 +56,11 @@ cat <<EOF > android-aarch64.txt
 ar = 'llvm-ar'
 c = ['$ndk/aarch64-linux-android35-clang', '--sysroot=$sysroot', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments', '-Wno-error']
 cpp = ['$ndk/aarch64-linux-android35-clang++', '--sysroot=$sysroot', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '--start-no-unused-arguments', '-static-libstdc++', '--end-no-unused-arguments', '-Wno-error']
-c_ld = 'ld.lld'
-cpp_ld = 'ld.lld'
+c_ld = 'lld'
+cpp_ld = 'lld'
 strip = 'llvm-strip'
 llvm-config = 'llvm-config'
 pkg-config = 'pkg-config'
-
-[properties]
-ndk = '$workdir/r29'
 
 [host_machine]
 system = 'android'
@@ -78,9 +75,10 @@ c = 'clang'
 cpp = 'clang++'
 ar = 'llvm-ar'
 strip = 'llvm-strip'
-c_ld = 'ld.lld'
-cpp_ld = 'ld.lld'
+c_ld = 'lld'
+cpp_ld = 'lld'
 pkg-config = 'pkg-config'
+llvm-config = 'llvm-config'
 
 [build_machine]
 system = 'linux'

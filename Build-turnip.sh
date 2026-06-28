@@ -4,8 +4,8 @@ workdir="$(pwd)/turnip_workdir"
 ndk="$workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/bin" #yes r29 is the directory
 sysroot="$workdir/r29/toolchains/llvm/prebuilt/linux-x86_64/sysroot"
 mesasrc="https://gitlab.freedesktop.org/mesa/mesa.git"
-BUILD_VERSION="26.2.0-V6.0" #this script is always maintained just update when new version.
-VERSION="V5.1"
+BUILD_VERSION="26.2.0-V6.1" #this script is always maintained just update when new version.
+VERSION="V6.1"
 PATCH_1="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/Gpu-Hacks.patch"
 PATCH_2="https://raw.githubusercontent.com/newb7171/Turnip_drivers_adreno/main/KGSL-hacks-whitebelyash.diff"
 PATCH_3="https://github.com/lfdevs/mesa-for-android-container/commit/0a60c9c4108200fda20016b594dcf8806f29a28e.diff"
@@ -13,6 +13,7 @@ PATCH_5="https://github.com/lfdevs/mesa-for-android-container/commit/216d25275a5
 PATCH_4="https://github.com/lfdevs/mesa-for-android-container/commit/4bae24252a344c47a2afcd0fbd238d83bbc29f46.diff"
 PATCH_6="https://github.com/lfdevs/mesa-for-android-container/commit/b23ef04b8e95e04ae4c77bb8c0bdcdcc97f813d7.diff"
 PATCH_7="https://raw.githubusercontent.com/JustCallMeJade/Turnip_drivers_adreno/main/40159.diff"
+PATCH_8="https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/42498.patch"
 
 echo "Only works in debian Arm64!!! press Ctrl + C to exit"
 echo "Installing build dependencies..."
@@ -53,7 +54,8 @@ for patch in \
 "$PATCH_4" \
 "$PATCH_5" \
 "$PATCH_6" \
-"$PATCH_7"
+"$PATCH_7" \
+"$PATCH_8"
 do
     wget "$patch"
 done
@@ -68,7 +70,7 @@ patch -p1 -i 4bae24252a344c47a2afcd0fbd238d83bbc29f46.diff
 patch -p1 -i 216d25275a57bc543944eb369a4e31ce3733a9a1.diff
 patch -p1 -i b23ef04b8e95e04ae4c77bb8c0bdcdcc97f813d7.diff
 patch -p1 -i 40159.diff
-
+patch -p1 -i 42498.patch
 git add -A
 
 echo "#define TUGEN8_DRV_VERSION \"$BUILD_VERSION\"" > ./src/freedreno/vulkan/tu_version.h

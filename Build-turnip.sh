@@ -72,7 +72,7 @@ patch -p1 -i 42498.patch
 patch -p1 -i 42159.patch
 git add -A
 
-echo "#define TUGEN8_DRV_VERSION \"$VERSION\"" > ./src/freedreno/vulkan/tu_version.h
+	echo "#define TUGEN8_DRV_VERSION \"v$VERSION\"" > ./src/freedreno/vulkan/tu_version.h
 
 export CC=clang
 export CXX=clang++
@@ -165,7 +165,7 @@ cat <<EOF > meta.json
 }
 EOF
 
-zip -9 "$workdir/turnip/Turnip-v$BUILD_VERSION.zip" vulkan.adreno.so meta.json
+zip -9 "$workdir/turnip/Turnip-v$VERSION.zip" vulkan.adreno.so meta.json
 
 if [ "$GITHUB_ACTIONS" = "true" ]; then
     echo "VERSION=$VERSION" >> "$GITHUB_ENV"
